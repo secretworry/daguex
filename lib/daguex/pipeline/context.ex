@@ -4,17 +4,19 @@ defmodule Daguex.Pipeline.Context do
 
   This module defines a `#{__MODULE__}` struct and the main functions for working with it.
 
-  * `image`   - the local image that can be used for further processing,
-                and for keeping necessay meta data that should be persisted
-  * `opts`    - the options passed to the pipeline
-  * `private` - shared data across different processor
-  * `done`    - an array contains all the executed processores and their
+  * `image`       - the image object that can be used for identifying specified image,
+                    and for keeping necessay meta data that should be persisted
+  * `image_file`  - a reference to local accessible image file
+  * `opts`        - the options passed to the pipeline
+  * `private`     - shared data across different processor
+  * `done`        - an array contains all the executed processores and their
                 corresponding result
   """
 
   @type done_t :: {module, any()}
   @type t :: %__MODULE__{
     image: Dageux.Image.t,
+    image_file: Daguex.ImageFile.t,
     opts: keyword,
     private: Map.t,
     done: [done_t]
@@ -23,12 +25,30 @@ defmodule Daguex.Pipeline.Context do
   @enforce_keys [:image]
   defstruct [
     image: nil,
+    image_file: nil,
     opts: [],
     private: %{},
     done: []
   ]
 
   alias __MODULE__
+
+  @doc """
+  Set image_file for the context
+
+  Use a file path or `Daguex.ImageFile` to update the image_file
+  """
+  @spec put_image_file(t, String.t | Daguex.ImageFile.t) :: t
+  def put_image_file(context = %Context{}, path) when is_binary(path) do
+    case Daguex.ImageFile.from_file(path) do
+      {:ok, image_file} -> %{context | image_file: image_file}
+      {:error, error} -> raise ArgumentError, "Cannot create `#{__MODULE__}` from `#{path}` for `#{inspect error}`"
+    end
+  end
+
+  def put_image_file(context = %Context{}, image_file = %Daguex.ImageFile{}) do
+    %{context | image_file: image_file}
+  end
 
 
   @doc """

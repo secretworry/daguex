@@ -1,9 +1,9 @@
-defmodule DummyRepo do
+defmodule TestRepo do
   @behaviour Daguex.Repo
 
   use GenServer
 
-  def start_link(_) do
+  def start_link() do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
@@ -27,7 +27,7 @@ defmodule DummyRepo do
     {:reply, {:ok, response}, state}
   end
 
-  def handle_cast(:init, state) do
+  def handle_cast(:reset, state) do
     {:noreply, %{}}
   end
 end

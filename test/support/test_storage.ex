@@ -1,4 +1,4 @@
-defmodule DummyStorage do
+defmodule TestStorage do
   defmodule Handler do
     use GenServer
     def start_link do

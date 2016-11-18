@@ -44,7 +44,7 @@ defmodule Daguex.Pipeline do
       {:replace, context, replacement} ->
         run_processors(replacement, context |> Context.done(processor))
       {:error, error} ->
-        {:error, error}
+        {:error, error, context}
     end
   end
 
@@ -86,6 +86,6 @@ defmodule Daguex.Pipeline do
     end
   end
 
-  def post_process({:error, error}), do: {:error, error}
+  def post_process({:error, error, _context}), do: {:error, error}
 
 end
