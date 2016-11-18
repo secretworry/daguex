@@ -6,19 +6,18 @@ defmodule Daguex.ImageFile do
   @type type :: String.t # "png" | "jpeg" | "gif" | "tif"
 
   @type t :: %__MODULE__{
-    local?: boolean,
     path: String.t,
     type: type,
     width: integer,
     height: integer
   }
 
-  defstruct local?: false, path: nil, type: nil, width: 0, height: 0
+  defstruct path: nil, type: nil, width: 0, height: 0
 
   def from_file(path) when is_binary(path) do
-     try do
+    try do
       image = Mogrify.open(path) |> Mogrify.verbose
-      {:ok, %ImageFile{local?: true, path: path, type: image.format, width: image.width, height: image.height}}
+      {:ok, %ImageFile{path: path, type: image.format, width: image.width |> String.to_integer, height: image.height |> String.to_integer}}
     rescue
       e ->
         {:error, e}
