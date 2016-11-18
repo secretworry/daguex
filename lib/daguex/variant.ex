@@ -9,17 +9,19 @@ defmodule Daguex.Variant do
 
   @type opts :: keyword
 
-  @type converter :: Variant.Converter.t | ((Daguex.ImageFile.t, opts) -> (Daguex.ImageFile))
+  @type converter :: Variant.Converter.t | atom
 
   @type t :: %__MODULE__{
     format: format,
-    converter: VariantConverter.t
+    converter: converter,
+    opts: opts
   }
 
-  @enforce_keys [:format, :converter]
+  @enforce_keys [:format, :converter, :opts]
   defstruct [
     format: nil,
-    converter: nil
+    converter: nil,
+    opts: []
   ]
 
   defmodule Converter do

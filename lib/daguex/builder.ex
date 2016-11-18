@@ -29,9 +29,9 @@ defmodule Daguex.Builder do
 
   defmacro __before_compile__(env) do
     module = env.module
-    variants = Module.get_attribute(module, :variants)
-    storages = Module.get_attribute(module, :storages) |> Enum.reverse
-    repo = Module.get_attribute(module, :repo)
+    variants = Module.get_attribute(module, :variants) |> Enum.reverse |> Daguex.Builder.validate_variants(module) |> Macro.escape
+    storages = Module.get_attribute(module, :storages) |> Enum.reverse |> Macro.escape
+    repo = Module.get_attribute(module, :repo) |> Macro.escape
 
     quote do
       def __daguex__(:variants), do: unquote(variants)
@@ -48,5 +48,16 @@ defmodule Daguex.Builder do
       def builder_resolve_call(identifier, format, opts) do
       end
     end
+  end
+
+  def validate_variants(variants, module) do
+    Enum.each(variants, fn %{converter: converter} ->
+      case Atom.to_char_list(converter) do
+        ~c"Elixir." ++ _ -> :ok
+        _ ->
+          if Module.defines?(module, {converter, 2}, :def), do: :ok, else: raise Daguex.Error, "#{module} should implement #{converter}/2"
+      end
+    end)
+    variants
   end
 end
