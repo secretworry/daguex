@@ -11,6 +11,8 @@ defmodule Daguex.Builder do
       Module.register_attribute __MODULE__,
         :storages, accumulate: true, persist: false
       Module.register_attribute __MODULE__,
+        :local_storage, accumulate: false, persist: false
+      Module.register_attribute __MODULE__,
         :repo, accumulate: false, persist: false
 
       def put(image_file, opts) do
@@ -31,12 +33,14 @@ defmodule Daguex.Builder do
     module = env.module
     variants = Module.get_attribute(module, :variants) |> Enum.reverse |> Daguex.Builder.validate_variants(module) |> Macro.escape
     storages = Module.get_attribute(module, :storages) |> Enum.reverse |> Macro.escape
-    repo = Module.get_attribute(module, :repo) |> Macro.escape
+    repo = Module.get_attribute(module, :repo) |> Daguex.Builder.required(:repo, module) |> Macro.escape
+    local_storage = Module.get_attribute(module, :local_storage) |> Daguex.Builder.required(:local_storage, module)|> Macro.escape
 
     quote do
       def __daguex__(:variants), do: unquote(variants)
       def __daguex__(:storages), do: unquote(storages)
       def __daguex__(:repo), do: unquote(repo)
+      def __daguex__(:local_storage), do: unquote(local_storage)
 
 
       def builder_put_call(image_file, opts) do
@@ -48,6 +52,13 @@ defmodule Daguex.Builder do
       def builder_resolve_call(identifier, format, opts) do
       end
     end
+  end
+
+  def required(value, name, module) do
+    unless value do
+      raise Daguex.Error, "#{name} is required for #{module}, but not specified"
+    end
+    value
   end
 
   def validate_variants(variants, module) do
