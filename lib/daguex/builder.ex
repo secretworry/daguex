@@ -15,8 +15,8 @@ defmodule Daguex.Builder do
       Module.register_attribute __MODULE__,
         :repo, accumulate: false, persist: false
 
-      def put(image_file, opts) do
-        builder_put_call(image_file, opts)
+      def put(image_file, id, opts) do
+        builder_put_call(image_file, id, opts)
       end
 
       def get(identifier, format, opts) do
@@ -43,7 +43,7 @@ defmodule Daguex.Builder do
       def __daguex__(:local_storage), do: unquote(local_storage)
 
 
-      def builder_put_call(image_file, opts) do
+      def builder_put_call(image_file, id, opts) do
       end
 
       def builder_get_call(identifier, format, opts) do

@@ -1,12 +1,36 @@
 defmodule Daguex.LocalStorage do
+  @moduledoc """
+  Default implementation for `Daguex.Storage` which dump images to the local dir `base_path`
+
+  ## Valid options
+
+  `#{__MODULE__}` supports following opts
+  * base_path   - (required) the path referrencing to the base directory for saving images
+  * assets_url  - (optional) the prefix for the url that would be return by `#{__MODULE__}.resolve/2`.
+                  if not specified, the resolve function will return a file url
+  """
 
   alias Daguex.ImageFile
 
   def init(opts) do
+    base_path = case Keyword.fetch(opts, :base_path) do
+      {:ok, base_path} -> base_path
+      :error -> raise ArgumentError, "base_path is required for `#{inspect __MODULE__}`"
+    end
+    case check_and_normalize_base_path(base_path) do
+      {:ok, path} -> Keyword.put(opts, :base_path, path)
+      {:error, error} -> raise ArgumentError, error
+    end
   end
 
-  def do_put(base_path, path, identifier, opts) do
-    target_path = Path.join(base_path, target_file(identifier, opts))
+  def init(_) do
+    raise ArgumentError, "base_path is required for `#{inspect __MODULE__}`"
+  end
+
+  def put(path, identifier, bucket, opts) do
+    base_path = get_base_path(opts)
+    target_file = target_file(identifier, bucket)
+    target_path = Path.join(base_path, target_file)
     target_directory = Path.dirname(target_path)
     filename = Path.basename(target_path)
     tmp_filename = "#{filename}.tmp"
@@ -14,31 +38,61 @@ defmodule Daguex.LocalStorage do
     with :ok <- File.mkdir_p(target_directory),
          :ok <- File.cp(path, tmp_path),
          :ok <- File.rename(tmp_path, target_path),
-      do: {:ok, identifier}
+      do: {:ok, target_file}
   end
 
-  defp target_file(identifier, _opts) do
-    hash = identifier |> Base.encode64(padding: false)
-    Path.join([hash, identifier])
+  defp target_file(identifier, bucket) do
+    hash = identifier |> Base.encode32(padding: false, case: :lower) |> String.slice(0..4)
+    Path.join([bucket, hash, identifier])
   end
 
-  def do_get(base_path, path, identifier, opts) do
-    target_path = Path.join(base_path, target_file(identifier, opts))
+  def get(identifier, opts) do
+    base_path = get_base_path(opts)
+    target_path = Path.join(base_path, identifier)
     if File.exists?(target_path) do
       {:ok, ImageFile.from_file(target_path)}
     else
-      {:error, :not_exist}
+      {:error, :not_found}
     end
   end
 
-  def do_resolve(asset_url, identifier, opts) do
-    target_file = target_file(identifier, opts)
-    {:ok, "#{asset_url}#{target_file}"}
+  def resolve(identifier, opts) do
+    case Keyword.fetch(opts, :assets_url) do
+      {:ok, assets_url} ->
+        {:ok, "#{assets_url}#{identifier}"}
+      :error -> {:ok, "file://" <> Path.join(get_base_path(opts), identifier)}
+    end
   end
 
-  def do_rm(base_path, identifier, opts) do
-    target_path = Path.join(base_path, target_file(identifier, opts))
-    File.rm(target_path)
+  def rm(identifier, opts) do
+    target_path = Path.join(get_base_path(opts), identifier)
+    case File.rm(target_path) do
+      :ok -> :ok
+      {:error, :enoent} -> :ok
+      error -> error
+    end
+  end
+
+  defp check_and_normalize_base_path(base_path) do
+    with {:ok, stat} <- File.stat(base_path) do
+      case stat do
+        %{access: :read_write} -> {:ok, base_path |> normalize_base_path}
+        _ -> {:error, "Illegal access #{stat.acess} for #{base_path}"}
+      end
+    end
+  end
+
+
+  defp get_base_path(opts) do
+    Keyword.get(opts, :base_path)
+  end
+
+  defp normalize_base_path(base_path) do
+    base_path = case base_path do
+      "/" <> _ -> base_path
+      _ -> Path.expand(base_path, File.cwd!)
+    end
+    if String.ends_with?(base_path, "/"), do: base_path, else: base_path <> "/"
   end
 
 end

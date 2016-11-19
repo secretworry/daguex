@@ -8,7 +8,7 @@ defmodule Daguex do
   @type id :: String.t
   @type error :: any
 
-  @callback put(ImageFile.t, opts) :: {:ok, id} | {:error, error}
+  @callback put(ImageFile.t, id, opts) :: {:ok, id} | {:error, error}
   @callback get(id, format, opts) :: {:ok, String.t} | {:error, :not_found} | {:error, error}
   @callback resolve(id, format, opts) :: {:ok, url} | {:error, :not_found} | {:error, error}
 
