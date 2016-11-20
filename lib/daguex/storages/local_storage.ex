@@ -27,7 +27,7 @@ defmodule Daguex.LocalStorage do
     raise ArgumentError, "base_path is required for `#{inspect __MODULE__}`"
   end
 
-  def put(path, identifier, bucket, opts) do
+  def put(path, identifier, bucket \\ nil, opts) do
     base_path = get_base_path(opts)
     target_file = target_file(identifier, bucket)
     target_path = Path.join(base_path, target_file)
@@ -49,6 +49,8 @@ defmodule Daguex.LocalStorage do
     end
   end
 
+  def get(identifier, _extra, opts), do: get(identifier, opts)
+
   def get(identifier, opts) do
     base_path = get_base_path(opts)
     target_path = Path.join(base_path, identifier)
@@ -59,6 +61,7 @@ defmodule Daguex.LocalStorage do
     end
   end
 
+  def resolve(identifier, _extra, opts), do: resolve(identifier, opts)
   def resolve(identifier, opts) do
     case Keyword.fetch(opts, :assets_url) do
       {:ok, assets_url} ->
@@ -67,6 +70,7 @@ defmodule Daguex.LocalStorage do
     end
   end
 
+  def rm(identifier, _extra, opts), do: rm(identifier, opts)
   def rm(identifier, opts) do
     target_path = Path.join(get_base_path(opts), identifier)
     case File.rm(target_path) do

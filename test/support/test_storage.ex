@@ -9,11 +9,11 @@ defmodule TestStorage do
       {:ok, %{}}
     end
 
-    def handle_call({:put, identifier, path}, _from, state) do
-      {:reply, {:ok, identifier}, Map.put(state, identifier, path)}
+    def handle_call({:put, path, id, _bucket}, _from, state) do
+      {:reply, {:ok, id}, Map.put(state, id, path)}
     end
 
-    def handle_call({:get, identifier}, _from, state) do
+    def handle_call({:get, identifier, _extra}, _from, state) do
       result = case Map.get(state, identifier) do
         nil -> {:error, :not_found}
         path -> {:ok, path}
@@ -21,7 +21,7 @@ defmodule TestStorage do
       {:reply, result, state}
     end
 
-    def handle_call({:resolve, identifier}, _from, state) do
+    def handle_call({:resolve, identifier, _extra}, _from, state) do
       result = case Map.get(state, identifier) do
         nil -> {:error, :not_found}
         path -> {:ok, "file://" <> path}
@@ -29,7 +29,7 @@ defmodule TestStorage do
       {:reply, result, state}
     end
 
-    def handle_call({:rm, identifier}, _from, state) do
+    def handle_call({:rm, identifier, _extra}, _from, state) do
       {:reply, :ok, Map.delete(state, identifier)}
     end
 
@@ -44,23 +44,22 @@ defmodule TestStorage do
     Handler.start_link
   end
 
-
   def init(opts), do: opts
 
-  def put(identifier, path, _opts) do
-    GenServer.call(Handler, {:put, identifier, path})
+  def put(path, id, bucket \\ nil, _opts) do
+    GenServer.call(Handler, {:put, path, id, bucket})
   end
 
-  def get(identifier, _opts) do
-    GenServer.call(Handler, {:get, identifier})
+  def get(identifier, extra \\ nil, _opts) do
+    GenServer.call(Handler, {:get, identifier, extra})
   end
 
-  def resolve(identifier, _opts) do
-    GenServer.call(Handler, {:resolve, identifier})
+  def resolve(identifier, extra \\ nil, _opts) do
+    GenServer.call(Handler, {:resolve, identifier, extra})
   end
 
-  def rm(identifier, _opts) do
-    GenServer.call(Handler, {:rm, identifier})
+  def rm(identifier, extra \\ nil, _opts) do
+    GenServer.call(Handler, {:rm, identifier, extra})
   end
 
   def reset() do

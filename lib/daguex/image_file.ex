@@ -4,42 +4,34 @@ defmodule Daguex.ImageFile do
   """
   alias __MODULE__
   @type type :: String.t # "png" | "jpeg" | "gif" | "tif"
-  @type id :: String.t
 
   @type t :: %__MODULE__{
     path: String.t,
-    id: id,
     type: type,
     width: integer,
     height: integer
   }
 
-  defstruct path: nil, id: nil, type: nil, width: 0, height: 0
+  defstruct path: nil, type: nil, width: 0, height: 0
 
-  def from_file(path, id \\ nil)
-  def from_file(path, nil) when is_binary(path) do
-    id = Path.basename(path, Path.extname(path))
-    from_file(path, id)
-  end
-
-  def from_file(path, id) when is_binary(path) do
+  def from_file(path) when is_binary(path) do
     try do
       image = Mogrify.open(path) |> Mogrify.verbose
-      {:ok, %ImageFile{path: path, id: id, type: image.format, width: image.width |> String.to_integer, height: image.height |> String.to_integer}}
+      {:ok, %ImageFile{path: path, type: image.format, width: image.width |> String.to_integer, height: image.height |> String.to_integer}}
     rescue
       e ->
         {:error, e}
     end
   end
 
-  def from_file!(path, id \\ nil) when is_binary(path) do
-    case from_file(path, id) do
+  def from_file!(path) when is_binary(path) do
+    case from_file(path) do
       {:ok, image_file} -> image_file
       {:error, e} -> raise e
     end
   end
 
-  def default_filename(%Daguex.ImageFile{id: id, type: type, width: width, height: height}) do
+  def default_filename(id, %Daguex.ImageFile{type: type, width: width, height: height}) do
     "#{id}_#{width}_#{height}#{extname(type)}"
   end
 

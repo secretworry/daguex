@@ -25,7 +25,7 @@ defmodule Daguex.Image do
 
   @spec add_variant(t, format, id, integer, integer, Daguex.ImageFile.type) :: t
   def add_variant(image = %__MODULE__{variants: variants}, format, id, width, height, type) do
-    %{image | variants: Map.put(variants, format, %{id: id, width: width, height: height, type: type})}
+    %{image | variants: Map.put(variants, format, %{"id" => id, "width" => width, "height" => height, "type" => type})}
   end
 
   def put_data(image = %__MODULE__{data_mod: data_mod}, keys, value) do

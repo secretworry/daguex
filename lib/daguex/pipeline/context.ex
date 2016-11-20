@@ -42,7 +42,7 @@ defmodule Daguex.Pipeline.Context do
   def put_image_file(context = %Context{}, path) when is_binary(path) do
     case Daguex.ImageFile.from_file(path) do
       {:ok, image_file} -> %{context | image_file: image_file}
-      {:error, error} -> raise ArgumentError, "Cannot create `#{__MODULE__}` from `#{path}` for `#{inspect error}`"
+      {:error, error} -> raise ArgumentError, "Cannot create `#{inspect __MODULE__}` from `#{path}` for `#{inspect error}`"
     end
   end
 
