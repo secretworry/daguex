@@ -11,7 +11,7 @@ defmodule Daguex.Processor.ConvertImage do
 
   use Daguex.Processor
 
-  alias Daguex.{LocalImage, Variant}
+  alias Daguex.{LocalImage, Image, Variant}
   import Daguex.Processor.StorageHelper
 
   def init(opts) do
@@ -32,6 +32,7 @@ defmodule Daguex.Processor.ConvertImage do
   def process(context, %{variants: variants, local_storage: local_storage}) do
     formats = get_formats(context.opts, variants)
     with {:ok, formats} <- validate_formats(formats, variants),
+         formats <- filter_formats(context.image, formats),
      do: convert_images(context, formats, variants, local_storage)
   end
 
@@ -46,12 +47,21 @@ defmodule Daguex.Processor.ConvertImage do
     end) || {:ok, formats}
   end
 
+  defp filter_formats(image, formats) do
+    Enum.reduce(formats, [], fn format, acc ->
+      if Image.has_variant?(image, format), do: acc, else: [format|acc]
+    end)
+  end
+
   defp convert_images(context, formats, variants, local_storage) do
-    Enum.reduce(formats, context, fn format, context ->
+    result = Enum.reduce_while(formats, {:ok, context}, fn format, {:ok, context} ->
       id = "#{context.image.id}_#{format}"
       with {:ok, new_image} <- convert_image(context.image_file, Map.get(variants, format)),
-           {:ok, context} <- save_image(context, new_image, id, format, local_storage),
-       do: context
+           {:ok, context} <- save_image(context, new_image, id, format, local_storage) do
+        {:cont, {:ok, context}}
+      else
+        e -> {:halt, e}
+      end
     end)
   end
 
