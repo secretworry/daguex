@@ -70,7 +70,8 @@ defmodule Daguex.Processor.ConvertImage do
   end
 
   defp save_image(context, image_file, id, format, local_storage) do
-    case put_image(context, image_file, id, format, "local", local_storage) do
+    bucket = Keyword.get(context.opts, :bucket)
+    case put_local_image(context.image, image_file, bucket, id, format, local_storage) do
       {:ok, image} -> {:ok, %{context | image: image}}
       error -> error
     end
