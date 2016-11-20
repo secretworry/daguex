@@ -17,7 +17,7 @@ defmodule Daguex.Processor.LoadLocalImageTest do
 
   describe "process/2" do
     test "should load local_image into the context" do
-      options = [local_storage: TestStorage]
+      options = %{local_storage: TestStorage}
       {:ok, context} = create_context(@image) |> LoadLocalImage.process(options)
       assert context.image_file
     end

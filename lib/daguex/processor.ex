@@ -20,6 +20,7 @@ defmodule Daguex.Processor do
   defmacro __using__(opts) do
     quote do
       @behaviour Daguex.Processor
+      import Daguex.Processor.Helper
       import Daguex.Pipeline.AsyncPostProcessor.Helper
       def init(opts), do: opts
 

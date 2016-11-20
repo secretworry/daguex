@@ -15,14 +15,8 @@ defmodule Daguex.Processor.ConvertImage do
   import Daguex.Processor.StorageHelper
 
   def init(opts) do
-    variants = case Keyword.fetch(opts, :variants) do
-      {:ok, variants} -> variants
-      :error -> raise ArgumentError, "variants is required for #{inspect __MODULE__}"
-    end
-    local_storage = case Keyword.fetch(opts, :local_storage) do
-      {:ok, local_storage} -> local_storage
-      :error -> raise ArgumentError, "local_storage is required for #{inspect __MODULE__}"
-    end
+    variants = required_option(:variants)
+    local_storage = required_option(:local_storage)
     variants = for variant <- variants, into: %{} do
       {variant.format, variant}
     end

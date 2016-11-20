@@ -3,11 +3,10 @@ defmodule Daguex.Processor.LoadLocalImage do
 
   alias Daguex.Pipeline.Context
 
-  def init([local_storage: _] = opts), do: opts
+  def init(opts), do: %{local_storage: required_option(:local_storage)}
 
-  def init(_), do: raise ArgumentError, "option `local_storage` is required for processor `#{__MODULE__}`"
 
-  def process(context, [local_storage: storage]) do
+  def process(context, %{local_storage: storage}) do
     {module, opts} = invoke_local_storage(storage)
     case module.get(context.image.id, module.init(opts)) do
       {:ok, path} -> {:ok, Context.put_image_file(context, path)}
