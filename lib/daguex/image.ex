@@ -9,6 +9,7 @@ defmodule Daguex.Image do
     width: integer,
     height: integer,
     variants: %{format => variant_t},
+    variants_mod: %{format => variant_t | :removed},
     data: Map.t,
     data_mod: Map.t
   }
@@ -19,13 +20,51 @@ defmodule Daguex.Image do
     width: 0,
     height: 0,
     variants: %{},
+    variants_mod: %{},
     data: %{},
     data_mod: %{}
   ]
 
   @spec add_variant(t, format, id, integer, integer, Daguex.ImageFile.type) :: t
-  def add_variant(image = %__MODULE__{variants: variants}, format, id, width, height, type) do
-    %{image | variants: Map.put(variants, format, %{"id" => id, "width" => width, "height" => height, "type" => type})}
+  def add_variant(image = %__MODULE__{variants_mod: variants_mod}, format, id, width, height, type) do
+    %{image | variants_mod: Map.put(variants_mod, format, %{"id" => id, "width" => width, "height" => height, "type" => type})}
+  end
+
+  def rm_variant(image = %__MODULE__{variants_mod: variants_mod}, format) do
+    %{image | variants_mod: Map.put(variants_mod, format, :removed)}
+  end
+
+  def get_variant(image = %__MODULE__{variants: variants, variants_mod: variants_mod}, format) do
+    case Map.get(variants_mod, format) do
+      :removed -> nil
+      nil -> Map.get(variants, format)
+      variant -> variant
+    end
+  end
+
+  def has_variant?(image = %__MODULE__{variants: variants, variants_mod: variants_mod}, format) do
+    case Map.get(variants_mod, format) do
+      :removed -> nil
+      nil -> Map.has_key?(variants, format)
+      _ -> true
+    end
+  end
+
+  def apply_variants_mod(image_or_mod, target_image \\ nil)
+
+  def apply_variants_mod(%__MODULE__{variants: variants, variants_mod: variants_mod} = image, nil) do
+    %{image | variants: do_apply_variants_mod(variants_mod, variants), variants_mod: %{}}
+  end
+
+  def apply_variants_mod(mod, %__MODULE__{variants: variants} = image) do
+    %{image | variants: do_apply_variants_mod(mod, variants), variants_mod: %{}}
+  end
+
+  defp do_apply_variants_mod(mod, variants) do
+    Enum.reduce(mod, variants, fn
+      {key, :removed}, variants -> Map.delete(variants, key)
+      {key, value}, variants -> Map.put(variants, key, value)
+    end)
   end
 
   def put_data(image = %__MODULE__{data_mod: data_mod}, keys, value) do
