@@ -54,7 +54,7 @@ defmodule Daguex.Processor.ConvertImage do
   end
 
   defp convert_images(context, formats, variants, local_storage) do
-    result = Enum.reduce_while(formats, {:ok, context}, fn format, {:ok, context} ->
+    Enum.reduce_while(formats, {:ok, context}, fn format, {:ok, context} ->
       id = "#{context.image.id}_#{format}"
       with {:ok, new_image} <- convert_image(context.image_file, Map.get(variants, format)),
            {:ok, context} <- save_image(context, new_image, id, format, local_storage) do
@@ -70,7 +70,10 @@ defmodule Daguex.Processor.ConvertImage do
   end
 
   defp save_image(context, image_file, id, format, local_storage) do
-    put_image_and_update_context(context, image_file, id, format, "local", local_storage)
+    case put_image(context, image_file, id, format, "local", local_storage) do
+      {:ok, image} -> {:ok, %{context | image: image}}
+      error -> error
+    end
   end
 
 end

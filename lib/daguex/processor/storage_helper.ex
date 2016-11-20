@@ -5,25 +5,50 @@ defmodule Daguex.Processor.StorageHelper do
 
   alias Daguex.{Image, ImageFile}
 
-  def put_image_and_update_context(context, image_file, id, format, storage_name, {storage, opts}) do
+  def put_image(context, image_file, id, format, storage_name, {storage, opts}) do
     id = Path.join([format, ImageFile.default_filename(id, image_file)])
-    context_or_error = case storage.put(image_file.path, id, Keyword.get(context.opts, :bucket), opts) do
-      {:ok, identifier} -> update_variant(context, format, identifier, image_file)
-      {:ok, identifier, payload} ->
-        context |> update_variant(format, identifier, image_file) |> update_payload(storage_name, format, payload)
+    image = context.image
+    case storage.put(image_file.path, id, Keyword.get(context.opts, :bucket), opts) do
+      {:ok, identifier} ->
+        {:ok, update_variant(image, format, identifier, image_file)}
+      {:ok, identifier, extra} ->
+        image = image |> update_variant(format, identifier, image_file) |> update_extra(storage_name, format, extra)
+        {:ok, image}
       error -> error
     end
-    case context_or_error do
-      {:error, _} = error -> error
-      context -> {:ok, context}
+  end
+
+  def get_image(image, format, storage_name, {storage, opts}) do
+    prepare_params(image, format, storage_name, fn variant, extra ->
+      storage.get(variant["id"], extra, opts)
+    end)
+  end
+
+  def resolve_image(image, format, storage_name, {storage, opts}) do
+    prepare_params(image, format, storage_name, fn variant, extra ->
+      storage.resolve(variant["id"], extra, opts)
+    end)
+  end
+
+  defp prepare_params(image, format, storage_name, callback) do
+    case Image.get_variant(image, format) do
+      nil -> {:error, :not_found}
+      variant ->
+        extra = get_extra(image, storage_name, format)
+        callback.(variant, extra)
     end
   end
 
-  defp update_variant(context, format, id, image_file) do
-    update_in context.image, &Image.add_variant(&1, format, id, image_file.width, image_file.height, image_file.type)
+  defp get_extra(image, storage_name, format) do
+    get_in image, ["extras", storage_name, format]
   end
 
-  defp update_payload(context, storage_name, format, payload) do
-    update_in context.image, &Image.put_data(&1, ["payloads", storage_name, format], payload)
+  defp update_variant(image, format, id, image_file) do
+    Image.add_variant(image, format, id, image_file.width, image_file.height, image_file.type)
   end
+
+  defp update_extra(image, storage_name, format, payload) do
+    Image.put_data(image, ["extras", storage_name, format], payload)
+  end
+
 end
