@@ -43,7 +43,10 @@ defmodule Daguex.LocalStorage do
 
   defp target_file(identifier, bucket) do
     hash = identifier |> Base.encode32(padding: false, case: :lower) |> String.slice(0..4)
-    Path.join([bucket, hash, identifier])
+    case bucket do
+      nil -> Path.join([hash, identifier])
+      bucket -> Path.join([bucket, hash, identifier])
+    end
   end
 
   def get(identifier, opts) do
