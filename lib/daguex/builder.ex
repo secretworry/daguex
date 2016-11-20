@@ -31,7 +31,7 @@ defmodule Daguex.Builder do
 
   defmacro __before_compile__(env) do
     module = env.module
-    variants = Module.get_attribute(module, :variants) |> Enum.reverse |> Daguex.Builder.validate_variants(module) |> Macro.escape
+    variants = Module.get_attribute(module, :variants) |> Enum.reverse |> Daguex.Builder.validate_variants() |> Macro.escape
     storages = Module.get_attribute(module, :storages) |> Enum.reverse |> Macro.escape
     repo = Module.get_attribute(module, :repo) |> Daguex.Builder.required(:repo, module) |> Macro.escape
     local_storage = Module.get_attribute(module, :local_storage) |> Daguex.Builder.required(:local_storage, module)|> Macro.escape
@@ -61,12 +61,12 @@ defmodule Daguex.Builder do
     value
   end
 
-  def validate_variants(variants, module) do
+  def validate_variants(variants) do
     Enum.each(variants, fn %{converter: converter} ->
-      case Atom.to_char_list(converter) do
-        ~c"Elixir." ++ _ -> :ok
-        _ ->
-          if Module.defines?(module, {converter, 2}, :def), do: :ok, else: raise Daguex.Error, "#{module} should implement #{converter}/2"
+      case converter do
+        module when is_atom(module) -> :ok
+        {module, func} ->
+          if Module.defines?(module, {func, 2}, :def), do: :ok, else: raise Daguex.Error, "#{module} should implement #{func}/2"
       end
     end)
     variants

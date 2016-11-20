@@ -15,7 +15,7 @@ defmodule Daguex.BuilderTest do
   test "export __daguex__ functions" do
     assert TestDaguex.__daguex__(:repo) == TestRepo
     assert TestDaguex.__daguex__(:storages) == [{TestStorage, [key: 1]}, {TestStorage, [key: 2]}]
-    assert TestDaguex.__daguex__(:variants) == [%Daguex.Variant{format: :format_1, converter: :convert, opts: [key: 1]}, %Daguex.Variant{format: :format_2, converter: :convert, opts: [key: 2]}]
+    assert TestDaguex.__daguex__(:variants) == [%Daguex.Variant{format: :format_1, converter: {Daguex.BuilderTest.TestDaguex, :convert}, opts: [key: 1]}, %Daguex.Variant{format: :format_2, converter: {Daguex.BuilderTest.TestDaguex, :convert}, opts: [key: 2]}]
     assert TestDaguex.__daguex__(:local_storage) == {TestStorage, [local: true]}
   end
 

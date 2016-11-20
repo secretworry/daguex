@@ -11,10 +11,11 @@ defmodule Daguex.Builder.Variant do
     end
   end
 
-  def preprocess(converter, env) when is_atom(converter), do: converter
+  def preprocess(converter, env) when is_atom(converter), do: {env.module, converter}
   def preprocess(converter, env), do: Macro.expand(converter, env)
 
-  def init_opts(converter, opts) when is_atom(converter), do: opts
+  def init_opts({_module, _func}, opts), do: opts
+
   def init_opts(converter, opts), do: converter.init(opts)
 
 end
