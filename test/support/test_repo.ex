@@ -16,7 +16,7 @@ defmodule TestRepo do
   def reset(), do: GenServer.cast(__MODULE__, :reset)
 
   def handle_call({:dump, image}, _from, state) do
-    {:reply, {:ok, image}, Map.put(state, image.identifier, image)}
+    {:reply, {:ok, image}, Map.put(state, image.id, image)}
   end
 
   def handle_call({:load, identifier}, _from, state) do
@@ -24,7 +24,7 @@ defmodule TestRepo do
       nil -> {:error, :not_found}
       image -> {:ok, image}
     end
-    {:reply, {:ok, response}, state}
+    {:reply, response, state}
   end
 
   def handle_cast(:reset, _state) do

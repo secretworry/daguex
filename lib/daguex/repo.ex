@@ -10,6 +10,6 @@ defmodule Daguex.Repo do
   @type opts :: keyword
 
 
-  @callback dump(Daguex.Image.t, opts) :: {:ok, Daguex.Image.t} | {:error, error}
+  @callback dump(Daguex.Image.t, opts) :: {:ok, Daguex.Image.t} | {:error, :modified} | {:error, error}
   @callback load(id, opts) :: {:ok, Daguex.Image.t} | {:error, :not_found} | {:error, error}
 end

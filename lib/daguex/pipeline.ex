@@ -66,7 +66,7 @@ defmodule Daguex.Pipeline do
   end
 
   defp invoke_processor({processor, opts}) do
-    {processor, opts}
+    {processor, processor.init(opts)}
   end
 
   defp invoke_processor(processor) do
