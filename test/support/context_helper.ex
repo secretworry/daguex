@@ -4,15 +4,17 @@ defmodule Daguex.ContextHelper do
 
   alias Daguex.{Image, ImageFile}
 
+  import Daguex.Processor.StorageHelper
+
   def create_context(path, identifier \\ nil)
 
   def create_context(path, nil), do: create_context(path, create_id_from_path(path))
 
   def create_context(path, identifier) do
-    {:ok, identifier} = TestStorage.put(path, identifier, %{})
     image_file = ImageFile.from_file!(path)
-    image = %Image{id: identifier, width: image_file.width, height: image_file.height, type: image_file.type}
-    %Context{image: image, image_file: image_file, local_storage: {TestStorage, %{}}}
+    image = Image.from_image_file(image_file, identifier)
+    {:ok, context} = %Context{image: image, local_storage: {TestStorage, %{}}} |> put_local_image(image_file, "orig")
+    context
   end
 
   defp create_id_from_path(path), do: Path.basename(path, Path.extname(path))

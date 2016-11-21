@@ -27,6 +27,10 @@ defmodule Daguex.Image do
     data_mod: %{}
   ]
 
+  def from_image_file(%Daguex.ImageFile{} = image_file, id) do
+    %__MODULE__{id: id, width: image_file.width, height: image_file.height, type: image_file.type}
+  end
+
   @spec add_variant(t, format, id, integer, integer, Daguex.ImageFile.type) :: t
   def add_variant(image = %__MODULE__{variants_mod: variants_mod}, format, id, width, height, type) do
     %{image | variants_mod: Map.put(variants_mod, format, build_variant(id, width, height, type))}
@@ -38,10 +42,6 @@ defmodule Daguex.Image do
 
   def rm_variant(image = %__MODULE__{variants_mod: variants_mod}, format) do
     %{image | variants_mod: Map.put(variants_mod, format, :removed)}
-  end
-
-  def get_variant(image, "orig") do
-    build_variant(image.id, image.width, image.height, image.type)
   end
 
   def get_variant(%__MODULE__{variants: variants, variants_mod: variants_mod}, format) do

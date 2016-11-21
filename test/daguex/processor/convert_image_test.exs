@@ -25,7 +25,8 @@ defmodule Daguex.Processor.ConvertImageTest do
       context = create_context(@image)
       {:ok, context} = ConvertImage.process(context, options)
       expect_variants = %{"s100" => %{"height" => 100, "id" => "daguex_s100_100_100.png", "type" => "png", "width" => 100},
-                          "s50" => %{"height" => 50, "id" => "daguex_s50_50_50.png", "type" => "png", "width" => 50}}
+                          "s50" => %{"height" => 50, "id" => "daguex_s50_50_50.png", "type" => "png", "width" => 50},
+                          "orig" => %{"height" => 200, "id" => "daguex_200_200.png", "type" => "png", "width" => 200}}
       variants = (context.image |> Image.apply_variants_mod).variants
       assert expect_variants == variants
       {:ok, _} = TestStorage.get(variants["s100"]["id"], [])
@@ -39,7 +40,8 @@ defmodule Daguex.Processor.ConvertImageTest do
       context = create_context(@image)
       context = put_in context.opts, [format: "s100"]
       {:ok, context} = ConvertImage.process(context, options)
-      expect_variants = %{"s100" => %{"height" => 100, "id" => "daguex_s100_100_100.png", "type" => "png", "width" => 100}}
+      expect_variants = %{"s100" => %{"height" => 100, "id" => "daguex_s100_100_100.png", "type" => "png", "width" => 100},
+                          "orig" => %{"height" => 200, "id" => "daguex_200_200.png", "type" => "png", "width" => 200}}
       variants = (context.image |> Image.apply_variants_mod).variants
       assert expect_variants == variants
       {:ok, _} = TestStorage.get(variants["s100"]["id"], [])

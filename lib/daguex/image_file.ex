@@ -30,17 +30,4 @@ defmodule Daguex.ImageFile do
       {:error, e} -> raise e
     end
   end
-
-  def default_filename(id, %Daguex.ImageFile{type: type, width: width, height: height}) do
-    "#{id}_#{width}_#{height}#{extname(type)}"
-  end
-
-  defp extname(type) do
-    case type do
-      "png" -> ".png"
-      "jpeg" -> ".jpg"
-      "gif" -> ".gif"
-      _ -> raise ArgumentError, "Unrecognizable type #{type}"
-    end
-  end
 end

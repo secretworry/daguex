@@ -13,7 +13,11 @@ defmodule TestStorage do
       {:ok, %{}}
     end
 
-    def handle_call({:put, path, id, _bucket}, _from, state) do
+    def handle_call({:put, path, id, bucket}, _from, state) do
+      id = case bucket do
+        nil -> id
+        _ -> "#{bucket}/#{id}"
+      end
       {:reply, {:ok, id}, Map.put(state, id, path)}
     end
 

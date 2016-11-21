@@ -12,13 +12,14 @@ defmodule Daguex.Processor.PutImage do
     image = context.image
     variants = Image.variants_with_origal(image) |> filter_variants(image, name)
     with {:ok, context, variant_and_images} <- load_local_images(context, variants) do
-      async(context, %{storage: storage, name: name, variants: variant_and_images, bucket: Keyword.get(context.opts, :bucket)}, &async_process/2, &post_process/2)
+      async(context, %{storage: storage, name: name, variants: variant_and_images}, &async_process/2, &post_process/2)
     end
   end
 
-  def async_process(context, %{storage: {storage, opts}, name: name, variants: variants, bucket: bucket}) do
-    Enum.reduce_while(variants, {:ok, []}, fn {format, image_file}, {:ok, acc} ->
-      case storage.put(image_file.path, context.image.id, bucket, opts) do
+  def async_process(context, %{storage: {storage, opts}, name: name, variants: variants}) do
+    bucket = Keyword.get(context.opts, :bucket)
+    Enum.reduce_while(variants, {:ok, []}, fn {format, %{"id" => id}, image_file}, {:ok, acc} ->
+      case storage.put(image_file.path, id, bucket, opts) do
         {:ok, identifier} -> {:cont, {:ok, [%{storage_name: name, format: format, id: identifier} | acc]}}
         {:ok, identifier, extra} -> {:cont, {:ok, [%{storage_name: name, format: format, id: identifier, extra: extra}|acc]}}
         error -> {:halt, error}
@@ -38,9 +39,9 @@ defmodule Daguex.Processor.PutImage do
   end
 
   defp load_local_images(context, variants) do
-    Enum.reduce_while(variants, {:ok, context, []}, fn {format, _variant}, {:ok, context, acc} ->
+    Enum.reduce_while(variants, {:ok, context, []}, fn {format, variant}, {:ok, context, acc} ->
       with {:ok, context, image_file} <- load_local_image(context, format) do
-        {:cont, {:ok, context, [{format, image_file}|acc]}}
+        {:cont, {:ok, context, [{format, variant, image_file}|acc]}}
       else
         e -> {:halt, e}
       end

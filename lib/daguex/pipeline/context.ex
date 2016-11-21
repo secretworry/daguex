@@ -16,7 +16,6 @@ defmodule Daguex.Pipeline.Context do
   @type done_t :: {module, any()}
   @type t :: %__MODULE__{
     image: Dageux.Image.t,
-    image_file: Daguex.ImageFile.t,
     local_storage: {Daguex.Storage.t, any},
     opts: keyword,
     private: Map.t,
@@ -26,7 +25,6 @@ defmodule Daguex.Pipeline.Context do
   @enforce_keys [:image, :local_storage]
   defstruct [
     image: nil,
-    image_file: nil,
     local_storage: nil,
     opts: [],
     private: %{},
@@ -34,19 +32,6 @@ defmodule Daguex.Pipeline.Context do
   ]
 
   alias __MODULE__
-
-  @doc """
-  Set image_file for the context
-
-  Use a file path or `Daguex.ImageFile` to update the image_file
-  """
-  @spec put_image_file(t, String.t | Daguex.ImageFile.t) :: t
-  def put_image_file(context = %Context{}, path) when is_binary(path) do
-    case Daguex.ImageFile.from_file(path) do
-      {:ok, image_file} -> %{context | image_file: image_file}
-      {:error, error} -> raise ArgumentError, "Cannot create `#{inspect __MODULE__}` from `#{path}` for `#{inspect error}`"
-    end
-  end
 
   def put_image_file(context = %Context{}, image_file = %Daguex.ImageFile{}) do
     %{context | image_file: image_file}

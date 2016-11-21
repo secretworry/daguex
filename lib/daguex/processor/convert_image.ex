@@ -48,9 +48,9 @@ defmodule Daguex.Processor.ConvertImage do
 
   defp convert_images(context, formats, variants) do
     Enum.reduce_while(formats, {:ok, context}, fn format, {:ok, context} ->
-      id = "#{context.image.id}_#{format}"
-      with {:ok, new_image} <- convert_image(context.image_file, Map.get(variants, format)),
-           {:ok, context} <- put_local_image(context, new_image, id, format) do
+      with {:ok, context, image_file} <- load_local_image(context, "orig"),
+           {:ok, new_image} <- convert_image(image_file, Map.get(variants, format)),
+           {:ok, context} <- put_local_image(context, new_image, format) do
         {:cont, {:ok, context}}
       else
         e -> {:halt, e}

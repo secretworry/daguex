@@ -37,9 +37,10 @@ defmodule Daguex.Processor.PutImageTest do
       opts = PutImage.init(storage: storage, name: "test_storage")
       {:ok, context} = Pipeline.call(context, [{PutImage, opts}])
       image = context.image |> Image.apply_data_mod |> Image.apply_variants_mod
-      data_expect = %{"ids" => %{"test_storage" => %{"orig" => "test"}}}
+      data_expect = %{"ids" => %{"test_storage" => %{"orig" => "test"}, "local" => %{"orig" => "test_200_200.png"}}}
+      variants_expect = %{"orig" => %{"height" => 200, "id" => "test_200_200.png", "type" => "png", "width" => 200}}
       assert data_expect == image.data
-      assert %{} == image.variants
+      assert variants_expect == image.variants
     end
   end
 end

@@ -3,15 +3,16 @@ defmodule Daguex.Processor.StorageHelper do
   Helpers for using `Daguex.Processor` in the `Daguex.Processor`
   """
 
-  alias Daguex.{Image, ImageFile}
+  alias Daguex.{Image, ImageFile, ImageHelper}
 
-  def put_local_image(context, image_file, id, format) do
+  def put_local_image(context, image_file, format) do
+    id = ImageHelper.variant_id(image_file, context.image.id, format)
     bucket = Keyword.get(context.opts, :bucket)
-    id = ImageFile.default_filename(id, image_file)
     {local_storage, opts} = context.local_storage
-    with {:ok, id} <- local_storage.put(image_file.path, id, bucket, opts),
-         image        <- update_variant(context.image, format, id, image_file),
-         {:ok, path}  <- local_storage.get(id, opts),
+    with {:ok, image} <- put_image(context.image, image_file, bucket, id, format, "local", context.local_storage),
+         store_id     <- get_id(image, "local", format),
+         image        <- update_variant(image, format, store_id, image_file),
+         {:ok, path}  <- local_storage.get(store_id, opts),
          {:ok, image_file} <- ImageFile.from_file(path) do
       context = %{context | image: image} |> cache_local_image(format, image_file)
       {:ok, context}
@@ -19,7 +20,6 @@ defmodule Daguex.Processor.StorageHelper do
   end
 
   def load_local_image(context, format) do
-
     case get_cached_local_image(context, format) do
       nil ->
         {local_storage, opts} = context.local_storage
@@ -48,10 +48,10 @@ defmodule Daguex.Processor.StorageHelper do
 
   def put_image(image, image_file, bucket, id, format, storage_name, {storage, opts}) do
     case storage.put(image_file.path, id, bucket, opts) do
-      {:ok, identifier} ->
-        {:ok, update_id(image, storage_name, format, identifier)}
-      {:ok, identifier, extra} ->
-        image = image |> update_id(storage_name, format, identifier) |> update_extra(storage_name, format, extra)
+      {:ok, id} ->
+        {:ok, update_id(image, storage_name, format, id)}
+      {:ok, id, extra} ->
+        image = image |> update_id(storage_name, format, id) |> update_extra(storage_name, format, extra)
         {:ok, image}
       error -> error
     end
