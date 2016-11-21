@@ -1,11 +1,15 @@
 defmodule TestStorage do
   defmodule Handler do
     use GenServer
-    def start_link do
-      GenServer.start_link(__MODULE__, [], name: __MODULE__)
+    def start_link(opts) do
+      GenServer.start_link(__MODULE__, [], opts)
     end
 
-    def init do
+    def start(opts) do
+      GenServer.start(__MODULE__, [], opts)
+    end
+
+    def init(_args) do
       {:ok, %{}}
     end
 
@@ -40,31 +44,47 @@ defmodule TestStorage do
 
   alias __MODULE__
 
-  def start_link do
-    Handler.start_link
+  def start(opts \\ []) do
+    Handler.start(opts)
   end
 
-  def init(opts), do: opts
-
-  def put(path, id, bucket \\ nil, _opts) do
-    GenServer.call(Handler, {:put, path, id, bucket})
+  def start_link(opts \\ []) do
+    Handler.start_link(opts)
   end
 
-  def get(identifier, extra \\ nil, _opts) do
-    GenServer.call(Handler, {:get, identifier, extra})
+  def init(opts) do
+    %{pid: Keyword.get(opts, :pid, Handler)}
   end
 
-  def resolve(identifier, extra \\ nil, _opts) do
-    GenServer.call(Handler, {:resolve, identifier, extra})
+  def put(path, id, bucket \\ nil, opts) do
+    GenServer.call(get_pid(opts), {:put, path, id, bucket})
   end
 
-  def rm(identifier, extra \\ nil, _opts) do
-    GenServer.call(Handler, {:rm, identifier, extra})
+  def get(identifier, extra \\ nil, opts) do
+    GenServer.call(get_pid(opts), {:get, identifier, extra})
   end
 
-  def reset() do
-    GenServer.cast(Handler, :reset)
+  def resolve(identifier, extra \\ nil, opts) do
+    GenServer.call(get_pid(opts), {:resolve, identifier, extra})
   end
 
+  def rm(identifier, extra \\ nil, opts) do
+    GenServer.call(get_pid(opts), {:rm, identifier, extra})
+  end
 
+  def reset(opts \\ nil) do
+    GenServer.cast(get_pid(opts), :reset)
+  end
+
+  def stop(opts) do
+    GenServer.stop(get_pid(opts))
+  end
+
+  defp get_pid(%{pid: pid}) do
+    pid
+  end
+
+  defp get_pid(_) do
+    TestStorage.Handler
+  end
 end

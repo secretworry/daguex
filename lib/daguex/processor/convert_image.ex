@@ -16,18 +16,17 @@ defmodule Daguex.Processor.ConvertImage do
 
   def init(opts) do
     variants = required_option(:variants)
-    local_storage = required_option(:local_storage)
     variants = for variant <- variants, into: %{} do
       {variant.format, variant}
     end
-    %{variants: variants, local_storage: local_storage}
+    %{variants: variants}
   end
 
-  def process(context, %{variants: variants, local_storage: local_storage}) do
+  def process(context, %{variants: variants}) do
     formats = get_formats(context.opts, variants)
     with {:ok, formats} <- validate_formats(formats, variants),
          formats <- filter_formats(context.image, formats),
-     do: convert_images(context, formats, variants, local_storage)
+     do: convert_images(context, formats, variants)
   end
 
   defp get_formats(opts, variants) do
@@ -37,7 +36,7 @@ defmodule Daguex.Processor.ConvertImage do
 
   defp validate_formats(formats, variants) do
     Enum.reduce_while(formats, nil, fn
-      format, nil -> if Map.has_key?(variants, format), do: {:cont, nil}, else: {:halt, {:error, "Illegal format '#{format}'"}}
+      format, nil -> if Map.has_key?(variants, format), do: {:cont, nil}, else: {:halt, {:error, {:illegal_format, format}}}
     end) || {:ok, formats}
   end
 
@@ -47,11 +46,11 @@ defmodule Daguex.Processor.ConvertImage do
     end)
   end
 
-  defp convert_images(context, formats, variants, local_storage) do
+  defp convert_images(context, formats, variants) do
     Enum.reduce_while(formats, {:ok, context}, fn format, {:ok, context} ->
       id = "#{context.image.id}_#{format}"
       with {:ok, new_image} <- convert_image(context.image_file, Map.get(variants, format)),
-           {:ok, context} <- save_image(context, new_image, id, format, local_storage) do
+           {:ok, context} <- put_local_image(context, new_image, id, format) do
         {:cont, {:ok, context}}
       else
         e -> {:halt, e}
@@ -62,13 +61,4 @@ defmodule Daguex.Processor.ConvertImage do
   defp convert_image(image_file, variant) do
     Variant.call(image_file, variant)
   end
-
-  defp save_image(context, image_file, id, format, local_storage) do
-    bucket = Keyword.get(context.opts, :bucket)
-    case put_local_image(context.image, image_file, bucket, id, format, local_storage) do
-      {:ok, image} -> {:ok, %{context | image: image}}
-      error -> error
-    end
-  end
-
 end

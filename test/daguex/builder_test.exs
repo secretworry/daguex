@@ -1,12 +1,27 @@
 defmodule Daguex.BuilderTest do
   use Daguex.DaguexCase
 
+  defmodule DummyStorage do
+    @behaviour Dageux.Storage
+    def init(opts) do
+      opts
+    end
+
+    def put(_path, id, _bucket \\ nil, _opts), do: {:ok, id}
+
+    def get(_id, _extra \\ nil, _opts), do: {:error, :not_found}
+
+    def resolve(_id, _extra \\ nil, _opts), do: {:error, :not_found}
+
+    def rm(_id, _extra \\ nil, _opts), do: {:error, :not_found}
+  end
+
   defmodule TestDaguex do
     use Daguex.Builder
     repo TestRepo
-    local_storage TestStorage, local: true
-    storage "test_1", TestStorage, key: 1
-    storage "test_2", TestStorage, key: 2
+    local_storage DummyStorage, local: true
+    storage "test_1", DummyStorage, key: 1
+    storage "test_2", DummyStorage, key: 2
     variant :format_1, :convert, key: 1
     variant :format_2, :convert, key: 2
     def convert(image, _opts), do: {:ok, image}
@@ -14,9 +29,9 @@ defmodule Daguex.BuilderTest do
 
   test "export __daguex__ functions" do
     assert TestDaguex.__daguex__(:repo) == TestRepo
-    assert TestDaguex.__daguex__(:storages) == [{"test_1", TestStorage, [key: 1]}, {"test_2", TestStorage, [key: 2]}]
+    assert TestDaguex.__daguex__(:storages) == [{"test_1", DummyStorage, [key: 1]}, {"test_2", DummyStorage, [key: 2]}]
     assert TestDaguex.__daguex__(:variants) == [%Daguex.Variant{format: :format_1, converter: {Daguex.BuilderTest.TestDaguex, :convert}, opts: [key: 1]}, %Daguex.Variant{format: :format_2, converter: {Daguex.BuilderTest.TestDaguex, :convert}, opts: [key: 2]}]
-    assert TestDaguex.__daguex__(:local_storage) == {TestStorage, [local: true]}
+    assert TestDaguex.__daguex__(:local_storage) == {DummyStorage, [local: true]}
   end
 
   test "raise erro for undefined variant converter method" do

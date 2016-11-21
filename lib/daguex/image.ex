@@ -8,17 +8,19 @@ defmodule Daguex.Image do
     id: id,
     width: integer,
     height: integer,
+    type: String.t,
     variants: %{format => variant_t},
     variants_mod: %{format => variant_t | :removed},
     data: Map.t,
     data_mod: Map.t
   }
 
-  @enforce_keys [:id, :width, :height]
+  @enforce_keys [:id, :width, :height, :type]
   defstruct [
     id: nil,
     width: 0,
     height: 0,
+    type: nil,
     variants: %{},
     variants_mod: %{},
     data: %{},
@@ -27,14 +29,22 @@ defmodule Daguex.Image do
 
   @spec add_variant(t, format, id, integer, integer, Daguex.ImageFile.type) :: t
   def add_variant(image = %__MODULE__{variants_mod: variants_mod}, format, id, width, height, type) do
-    %{image | variants_mod: Map.put(variants_mod, format, %{"id" => id, "width" => width, "height" => height, "type" => type})}
+    %{image | variants_mod: Map.put(variants_mod, format, build_variant(id, width, height, type))}
+  end
+
+  defp build_variant(id, width, height, type) do
+    %{"id" => id, "width" => width, "height" => height, "type" => type}
   end
 
   def rm_variant(image = %__MODULE__{variants_mod: variants_mod}, format) do
     %{image | variants_mod: Map.put(variants_mod, format, :removed)}
   end
 
-  def get_variant(image = %__MODULE__{variants: variants, variants_mod: variants_mod}, format) do
+  def get_variant(image, "orig") do
+    build_variant(image.id, image.width, image.height, image.type)
+  end
+
+  def get_variant(%__MODULE__{variants: variants, variants_mod: variants_mod}, format) do
     case Map.get(variants_mod, format) do
       :removed -> nil
       nil -> Map.get(variants, format)
@@ -42,7 +52,7 @@ defmodule Daguex.Image do
     end
   end
 
-  def has_variant?(image = %__MODULE__{variants: variants, variants_mod: variants_mod}, format) do
+  def has_variant?(%__MODULE__{variants: variants, variants_mod: variants_mod}, format) do
     case Map.get(variants_mod, format) do
       :removed -> nil
       nil -> Map.has_key?(variants, format)
@@ -67,6 +77,14 @@ defmodule Daguex.Image do
     end)
   end
 
+  def variants(%__MODULE__{variants: variants, variants_mod: variants_mod}) do
+    do_apply_variants_mod(variants_mod, variants)
+  end
+
+  def variants_with_origal(image) do
+    variants(image) |> Map.put("orig", build_variant(image.id, image.width, image.height, image.type))
+  end
+
   def put_data(image = %__MODULE__{data_mod: data_mod}, keys, value) do
     %{image | data_mod: do_put_data(data_mod, keys, value)}
   end
@@ -75,7 +93,7 @@ defmodule Daguex.Image do
     put_data(image, keys, :removed)
   end
 
-  def get_data(image = %__MODULE__{data: data, data_mod: data_mod}, keys, default_value \\ nil) do
+  def get_data(%__MODULE__{data: data, data_mod: data_mod}, keys, default_value \\ nil) do
     case do_get_data(data_mod, keys) do
       :removed -> default_value
       nil -> do_get_data(data, keys)
@@ -85,7 +103,7 @@ defmodule Daguex.Image do
 
   def apply_data_mod(image_or_mod, target_image \\ nil)
 
-  def apply_data_mod(%__MODULE__{data: data, data_mod: data_mod} = image, nil) do
+  def apply_data_mod(%__MODULE__{data_mod: data_mod} = image, nil) do
     apply_data_mod(data_mod, image)
   end
 
@@ -101,7 +119,7 @@ defmodule Daguex.Image do
     Map.put(data, key, do_put_data(Map.get(data, key), tail, value))
   end
 
-  defp do_put_data(data, [], value), do: value
+  defp do_put_data(_data, [], value), do: value
 
   defp do_get_data(:removed, _), do: :removed
 

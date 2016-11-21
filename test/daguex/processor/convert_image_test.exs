@@ -15,14 +15,6 @@ defmodule Daguex.Processor.ConvertImageTest do
         ConvertImage.init(local_storage: {TestStorage, TestStorage.init([])})
       end
     end
-
-    test "should raise ArgumentError for not passing in local_storage" do
-      assert_raise ArgumentError, "local_storage is required for Daguex.Processor.ConvertImage", fn->
-        ConvertImage.init(
-          variants: [%Variant{format: :test, converter: DefaultConverter, opts: [size: "100x100"]}]
-        )
-      end
-    end
   end
 
   describe "process/2" do
@@ -32,8 +24,8 @@ defmodule Daguex.Processor.ConvertImageTest do
         variants: [%Variant{format: "s100", converter: DefaultConverter, opts: [size: "100x100"]}, %Variant{format: "s50", converter: DefaultConverter, opts: [size: "50x50"]}])
       context = create_context(@image)
       {:ok, context} = ConvertImage.process(context, options)
-      expect_variants = %{"s100" => %{"height" => 100, "id" => "s100/daguex_s100_100_100.png", "type" => "png", "width" => 100},
-                          "s50" => %{"height" => 50, "id" => "s50/daguex_s50_50_50.png", "type" => "png", "width" => 50}}
+      expect_variants = %{"s100" => %{"height" => 100, "id" => "daguex_s100_100_100.png", "type" => "png", "width" => 100},
+                          "s50" => %{"height" => 50, "id" => "daguex_s50_50_50.png", "type" => "png", "width" => 50}}
       variants = (context.image |> Image.apply_variants_mod).variants
       assert expect_variants == variants
       {:ok, _} = TestStorage.get(variants["s100"]["id"], [])
@@ -47,7 +39,7 @@ defmodule Daguex.Processor.ConvertImageTest do
       context = create_context(@image)
       context = put_in context.opts, [format: "s100"]
       {:ok, context} = ConvertImage.process(context, options)
-      expect_variants = %{"s100" => %{"height" => 100, "id" => "s100/daguex_s100_100_100.png", "type" => "png", "width" => 100}}
+      expect_variants = %{"s100" => %{"height" => 100, "id" => "daguex_s100_100_100.png", "type" => "png", "width" => 100}}
       variants = (context.image |> Image.apply_variants_mod).variants
       assert expect_variants == variants
       {:ok, _} = TestStorage.get(variants["s100"]["id"], [])

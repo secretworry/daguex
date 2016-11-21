@@ -7,27 +7,40 @@ defmodule Daguex.Pipeline do
   """
 
   alias __MODULE__
-  alias Daguex.{Processor, ImageFile, Image}
+  alias Daguex.{Processor, Image}
   alias Daguex.Pipeline.Context
 
   @type processor_config :: Processor.t | {Processor.t, Processor.opts}
 
   @type t :: [processor_config | [processor_config]]
 
-  @type image_type :: Image.t
+  @type local_storage :: {Daguex.Storage.t, any}
 
-  @spec run(image_type, keyword, t) :: {:ok, Image.t} | {:error, String.t}
-  def run(image, opts, pipeline) do
-    context = build_context(image, opts)
+  @type error :: any
+
+  @spec run(Image.t, local_storage, keyword, t) :: {:ok, Image.t} | {:error, error}
+  def run(image, local_storage, opts, pipeline) do
+    context = build_context(image, local_storage, opts)
+    pipeline
+    |> List.flatten
+    |> run_processors(context)
+    |> post_process
+    |> get_image
+  end
+
+
+  @spec call(Context.t, t) :: {:ok, Context.t} | {:error, error}
+  def call(context, pipeline) do
     pipeline
     |> List.flatten
     |> run_processors(context)
     |> post_process
   end
 
-  defp build_context(image, opts) do
+  defp build_context(image, local_storage, opts) do
     %Pipeline.Context{
       image: image,
+      local_storage: local_storage,
       opts: opts
     }
   end
@@ -48,12 +61,12 @@ defmodule Daguex.Pipeline do
     end
   end
 
-  defp run_processors([], context = %{done: done}) do
+  defp run_processors([], context) do
     {:ok, context}
   end
 
-  defp invoke_processor({processor, opts}) when is_list(opts) do
-    {processor, processor.init(opts)}
+  defp invoke_processor({processor, opts}) do
+    {processor, opts}
   end
 
   defp invoke_processor(processor) do
@@ -63,7 +76,7 @@ defmodule Daguex.Pipeline do
   def post_process({:ok, context = %{done: done}}) do
     post_processors = Application.get_env(:daguex, :post_processors, [])
     done = done |> Enum.reverse
-    result = post_processors |> Enum.reduce_while(context, fn post_processor, context ->
+    post_processors |> Enum.reduce_while({:ok, context}, fn post_processor, {:ok, context} ->
       init = post_processor.init(context)
       case Enum.reduce_while(done, {context, init}, fn item, {context, acc} ->
         case post_processor.each_result(context, item, acc) do
@@ -75,17 +88,17 @@ defmodule Daguex.Pipeline do
         {:error, error} -> {:halt, {:error, error}}
         {context, acc} ->
           case post_processor.process(context, acc) do
-            {:ok, context} -> {:cont, context}
+            {:ok, context} -> {:cont, {:ok, context}}
             {:error, error} -> {:halt, {:error, error}}
           end
       end
     end)
-    case result do
-      {:error, error} -> {:error, error}
-      %{image: image} -> {:ok, image}
-    end
   end
 
   def post_process({:error, error, _context}), do: {:error, error}
+
+  def get_image({:ok, context}), do: {:ok, context.image}
+
+  def get_image({:error, _} = error), do: error
 
 end

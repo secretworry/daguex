@@ -5,11 +5,45 @@ defmodule Daguex.Processor.StorageHelper do
 
   alias Daguex.{Image, ImageFile}
 
-  def put_local_image(image, image_file, bucket, id, format, {storage, opts}) do
-    id = Path.join([format, ImageFile.default_filename(id, image_file)])
-    with {:ok, image} <- put_image(image, image_file, bucket, id, format, "local", {storage, opts}) do
-      {:ok, image |> update_variant(format, id, image_file)}
+  def put_local_image(context, image_file, id, format) do
+    bucket = Keyword.get(context.opts, :bucket)
+    id = ImageFile.default_filename(id, image_file)
+    {local_storage, opts} = context.local_storage
+    with {:ok, id} <- local_storage.put(image_file.path, id, bucket, opts),
+         image        <- update_variant(context.image, format, id, image_file),
+         {:ok, path}  <- local_storage.get(id, opts),
+         {:ok, image_file} <- ImageFile.from_file(path) do
+      context = %{context | image: image} |> cache_local_image(format, image_file)
+      {:ok, context}
     end
+  end
+
+  def load_local_image(context, format) do
+
+    case get_cached_local_image(context, format) do
+      nil ->
+        {local_storage, opts} = context.local_storage
+        case Image.get_variant(context.image, format) do
+          nil -> {:error, :not_found}
+          %{"id" => id} ->
+            with {:ok, path} <- local_storage.get(id, opts),
+                 {:ok, image_file} <- ImageFile.from_file(path) do
+              context = context |> cache_local_image(format, image_file)
+              {:ok, context, image_file}
+            end
+        end
+      local_image -> {:ok, context, local_image}
+    end
+  end
+
+  defp cache_local_image(context, format, image_file) do
+    update_in context.private, fn private ->
+      Map.update(private, :local_images, %{format => image_file}, &Map.put(&1, format, image_file))
+    end
+  end
+
+  defp get_cached_local_image(context, format) do
+    get_in context.private, [:local_images, format]
   end
 
   def put_image(image, image_file, bucket, id, format, storage_name, {storage, opts}) do
@@ -35,33 +69,37 @@ defmodule Daguex.Processor.StorageHelper do
     end)
   end
 
+  def saved?(image, storage_name, format) do
+    get_id(image, storage_name, format)
+  end
+
   defp prepare_params(image, format, storage_name, callback) do
     case Image.get_variant(image, format) do
       nil -> {:error, :not_found}
-      variant ->
+      _ ->
         id = get_id(image, storage_name, format)
         extra = get_extra(image, storage_name, format)
         callback.(id, extra)
     end
   end
 
-  defp get_extra(image, storage_name, format) do
-    get_in image, ["extras", storage_name, format]
+  def get_extra(image, storage_name, format) do
+    Image.get_data(image, ["extras", storage_name, format])
   end
 
-  defp get_id(image, storage_name, format) do
-    get_in image, ["ids", storage_name, format]
+  def get_id(image, storage_name, format) do
+    Image.get_data(image, ["ids", storage_name, format])
   end
 
-  defp update_id(image, storage_name, format, id) do
+  def update_id(image, storage_name, format, id) do
     Image.put_data(image, ["ids", storage_name, format], id)
   end
 
-  defp update_variant(image, format, id, image_file) do
+  def update_variant(image, format, id, image_file) do
     Image.add_variant(image, format, id, image_file.width, image_file.height, image_file.type)
   end
 
-  defp update_extra(image, storage_name, format, extra) do
+  def update_extra(image, storage_name, format, extra) do
     Image.put_data(image, ["extras", storage_name, format], extra)
   end
 

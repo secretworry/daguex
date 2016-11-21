@@ -19,11 +19,11 @@ defmodule Daguex.Builder do
         builder_put_call(image_file, id, opts)
       end
 
-      def get(identifier, format, opts) do
+      def get(identifier, format \\ "orig", opts) do
         builder_get_call(identifier, format, opts)
       end
 
-      def resolve(identifier, format, opts) do
+      def resolve(identifier, format \\ "orig", opts) do
         builder_resolve_call(identifier, format, opts)
       end
     end

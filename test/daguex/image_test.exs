@@ -3,7 +3,7 @@ defmodule Daguex.ImageTest do
 
   alias Daguex.Image
 
-  @default_image %Image{id: "id", width: 100, height: 100}
+  @default_image %Image{id: "id", width: 100, height: 100, type: "png"}
 
   describe "get_data/3" do
     test "should get nil for data not exist" do

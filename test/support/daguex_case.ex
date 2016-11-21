@@ -5,10 +5,10 @@ defmodule Daguex.DaguexCase do
 
   setup do
     TestRepo.reset()
-    TestStorage.reset()
+    TestStorage.reset(%{pid: TestStorage.Handler})
     on_exit fn ->
       TestRepo.reset()
-      TestStorage.reset()
+      TestStorage.reset(%{pid: TestStorage.Handler})
     end
   end
 end

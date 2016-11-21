@@ -17,15 +17,17 @@ defmodule Daguex.Pipeline.Context do
   @type t :: %__MODULE__{
     image: Dageux.Image.t,
     image_file: Daguex.ImageFile.t,
+    local_storage: {Daguex.Storage.t, any},
     opts: keyword,
     private: Map.t,
     done: [done_t]
   }
 
-  @enforce_keys [:image]
+  @enforce_keys [:image, :local_storage]
   defstruct [
     image: nil,
     image_file: nil,
+    local_storage: nil,
     opts: [],
     private: %{},
     done: []
