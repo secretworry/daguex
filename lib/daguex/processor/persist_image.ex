@@ -12,26 +12,15 @@ defmodule Daguex.Processor.PersistImage do
     do_dump(applied_image, context, opts)
   end
 
-  defp do_dump(applied_image, context, opts, attempts \\ 0)
-  defp do_dump(applied_image, context, %{repo: repo} = opts, attempts) when attempts < 10 do
-    repo.dump(applied_image, context.opts) |> process_dump_result(context, opts, attempts)
-  end
-
-  defp do_dump(_image, _context, _opts, attempts) do
-    {:error, {:too_many_attempts, attempts}}
-  end
-
-  defp process_dump_result({:ok, image}, context, _opts, _attempts) do
-    {:ok, %{context | image: image}}
-  end
-
-  defp process_dump_result({:error, :modified}, context, %{repo: repo} = opts, attempts) do
-    case repo.load(context.image.key, context.opts) do
-      {:ok, new_image} -> merge_image(context.image, new_image) |> do_dump(context, opts, attempts + 1)
-      {:error, :not_found} ->
-        context.image |> apply_image_modifications |> do_dump(context, opts, attempts + 1)
-      {:error, _} = error -> error
+  defp do_dump(applied_image, context, %{repo: repo}) do
+    case repo.dump(applied_image, &update_on_stale(context.image, &1), context.opts) do
+      {:ok, image} -> {:ok, %{context | image: image}}
+      error -> error
     end
+  end
+
+  defp update_on_stale(old_image, new_image) do
+    merge_image(old_image, new_image)
   end
 
   defp apply_image_modifications(image) do

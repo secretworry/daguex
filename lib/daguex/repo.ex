@@ -8,12 +8,13 @@ defmodule Daguex.Repo do
   @type key :: String.t
   @type error :: any
   @type opts :: keyword
-  @type dump_t :: {:ok, Daguex.Image.t} | {:error, :modified} | {:error, error}
+  @type dump_t :: {:ok, Daguex.Image.t} | {:error, error}
   @type load_t :: {:ok, Daguex.Image.t} | {:error, :not_found} | {:error, error}
+  @type updater :: (Daguex.Image.t -> Daguex.Image.t)
 
 
-  @callback dump(Daguex.Image.t) :: dump_t
-  @callback dump(Daguex.Image.t, opts) :: dump_t
+  @callback dump(Daguex.Image.t, updater) :: dump_t
+  @callback dump(Daguex.Image.t, updater, opts) :: dump_t
   @callback load(key) :: load_t
   @callback load(key, opts) :: load_t
 end
