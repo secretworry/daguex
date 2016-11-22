@@ -33,4 +33,36 @@ defmodule DaguexTest do
       {:ok, _} = Daguex.Processor.StorageHelper.get_image(image, "s100", "test", {TestStorage, storage_opts})
     end
   end
+
+  describe "resolve/3" do
+    test "should resovle without error", context do
+      pid = Map.get(context, :local_storage_pid)
+      defmodule ResolveDaguex do
+        use Daguex.Builder
+        local_storage TestStorage
+        repo TestRepo
+        storage "test", TestStorage, [pid: pid]
+        variant "s100", Daguex.Variant.DefaultConverter, size: "100x100"
+      end
+      {:ok, image_file} = ImageFile.from_file(@image)
+      {:ok, id} = ResolveDaguex.put(image_file, "id", bucket: "bucket")
+      {:ok, _url} = ResolveDaguex.resolve(id, "s100", [])
+    end
+  end
+
+  describe "get/3" do
+    test "should get an image without erro", context do
+      pid = Map.get(context, :local_storage_pid)
+      defmodule GetDaguex do
+        use Daguex.Builder
+        local_storage TestStorage
+        repo TestRepo
+        storage "test", TestStorage, [pid: pid]
+        variant "s100", Daguex.Variant.DefaultConverter, size: "100x100"
+      end
+      {:ok, image_file} = ImageFile.from_file(@image)
+      {:ok, id} = GetDaguex.put(image_file, "id", bucket: "bucket")
+      {:ok, _path} = GetDaguex.get(id, "s100", [])
+    end
+  end
 end
