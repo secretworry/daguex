@@ -49,6 +49,17 @@ defmodule Daguex.Pipeline.Context do
   end
 
   @doc """
+  Gets a new **private** value assigned to `key` in the context.
+  """
+  def get_private(%Context{private: private}, key, default_value \\ nil) do
+    Map.get(private, key, default_value)
+  end
+
+  def put_opts(context = %Context{opts: opts}, key, value) when is_atom(key) do
+    %{context | opts: Keyword.put(opts, key, value)}
+  end
+
+  @doc """
   Prepends an executed processor to the done fields of the context
   """
   def done(context = %Context{done: done}, processor, result \\ :ok) when is_atom(processor) do
