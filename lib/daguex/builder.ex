@@ -19,13 +19,24 @@ defmodule Daguex.Builder do
         builder_put_call(image_file, id, opts)
       end
 
-      def get(identifier, format \\ "orig", opts) do
+      def get(id_or_image, format \\ "orig", opts)
+      def get(image = %Daguex.Image{}, format, opts) do
+        builder_get_image_call(image, format, opts)
+      end
+
+      def get(identifier, format, opts) do
         builder_get_call(identifier, format, opts)
       end
 
-      def resolve(identifier, format \\ "orig", opts) do
+
+      def resolve(id_or_image, format \\ "orig", opts)
+      def resolve(image = %Daguex.Image{}, format, opts) do
+        builder_resolve_image_call(image, format, opts)
+      end
+      def resolve(identifier, format, opts) do
         builder_resolve_call(identifier, format, opts)
       end
+
     end
   end
 
@@ -43,7 +54,7 @@ defmodule Daguex.Builder do
     end) |> Enum.reverse |> Macro.escape
 
     persist_pipeline = [{Daguex.Processor.PersistImage, [repo: repo]}] |> Macro.escape
-    get_pipeline = [] |> Macro.escape
+    get_pipeline = [{Daguex.Processor.GetImage, [storages: storages]}] |> Macro.escape
     resolve_pipeline = [{Daguex.Processor.ResolveImage, [storages: storages]}] |> Macro.escape
     quote do
       def __daguex__(:variants), do: unquote(variants |> Macro.escape)
@@ -62,19 +73,30 @@ defmodule Daguex.Builder do
         end
       end
 
+      def builder_get_image_call(image, format, opts) do
+        with context = %Daguex.Pipeline.Context{image: image, local_storage: unquote(local_storage), opts: opts |> Keyword.put(:format, format)},
+             {:ok, context} <- Daguex.pipeline.call(context, unquote(get_pipeline)) do
+          {:ok, Daguex.Processor.GetImage.get_image(context)}
+        end
+      end
       def builder_get_call(identifier, format, opts) do
-        with {:ok, image} <- unquote(repo).load(identifier, opts),
-             context = %Daguex.Pipeline.Context{image: image, local_storage: unquote(local_storage), opts: opts |> Keyword.put(:format, format)},
+        case unquote(repo).load(identifier, opts) do
+          {:ok, image} -> builder_get_image_call(image, format, opts)
+          error -> error
+        end
+      end
+
+      def builder_resolve_image_call(image, format, opts) do
+        with context = %Daguex.Pipeline.Context{image: image, local_storage: unquote(local_storage), opts: opts |> Keyword.put(format: format)},
              {:ok, context} <- Daguex.pipeline.call(context, unquote(resolve_pipeline)) do
-          :ok
+          {:ok, Daguex.Processor.ResolveImage.get_url(context)}
         end
       end
 
       def builder_resolve_call(identifier, format, opts) do
-        with {:ok, image} <- unquote(repo).load(identifier, opts),
-             context = %Daguex.Pipeline.Context{image: image, local_storage: unquote(local_storage), opts: opts |> Keyword.put(format: format)},
-             {:ok, context} <- Daguex.pipeline.call(context, unquote(resolve_pipeline)) do
-          {:ok, Daguex.Processor.ResolveImage.get_url(context)}
+        case unquote(repo).load(identifier, opts) do
+          {:ok, image} -> builder_resolve_image_call(image, format, opts)
+          error -> error
         end
       end
     end
