@@ -46,7 +46,7 @@ defmodule Daguex.TempFile do
       [] ->
         {:ok, tmps} = GenServer.call(server, :register)
         {mega, _, _} = :os.timestamp
-        subdir = "/plug-" <> i(mega)
+        subdir = "/daguex-" <> i(mega)
 
         if tmp = Enum.find_value(tmps, &make_tmp_dir(&1 <> subdir)) do
           true = :ets.insert_new(@table, {pid, tmp, []})
@@ -59,7 +59,7 @@ defmodule Daguex.TempFile do
 
   defp make_tmp_dir(path) do
     case File.mkdir_p(path) do
-      :ok -> path
+      :ok -> path |> Path.expand
       {:error, _} -> nil
     end
   end

@@ -17,7 +17,7 @@ defmodule Daguex.Processor do
   @callback init(opts) :: opts
   @callback process(Daguex.Pipeline.Context.t, opts) :: result_t
 
-  defmacro __using__(opts) do
+  defmacro __using__(_opts) do
     quote do
       @behaviour Daguex.Processor
       import Daguex.Processor.Helper

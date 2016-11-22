@@ -12,7 +12,8 @@ defmodule Daguex.Processor.PersistImage do
     do_dump(applied_image, context, opts)
   end
 
-  defp do_dump(applied_image, context, %{repo: repo} = opts, attempts \\ 0) when attempts < 10 do
+  defp do_dump(applied_image, context, opts, attempts \\ 0)
+  defp do_dump(applied_image, context, %{repo: repo} = opts, attempts) when attempts < 10 do
     repo.dump(applied_image, context.opts) |> process_dump_result(context, opts, attempts)
   end
 

@@ -11,7 +11,7 @@ defmodule Daguex.Processor.StorageHelper do
     {local_storage, opts} = context.local_storage
     with {:ok, image} <- put_image(context.image, image_file, bucket, id, format, "local", context.local_storage),
          store_id     <- get_id(image, "local", format),
-         image        <- update_variant(image, format, store_id, image_file),
+         image        <- update_variant(image, format, id, image_file),
          {:ok, path}  <- local_storage.get(store_id, opts),
          {:ok, image_file} <- ImageFile.from_file(path) do
       context = %{context | image: image} |> cache_local_image(format, image_file)

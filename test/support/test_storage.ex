@@ -41,6 +41,10 @@ defmodule TestStorage do
       {:reply, :ok, Map.delete(state, identifier)}
     end
 
+    def handle_call(:dump, _from, state) do
+      {:reply, state, state}
+    end
+
     def handle_cast(:reset, _state) do
       {:noreply, %{}}
     end
@@ -78,6 +82,10 @@ defmodule TestStorage do
 
   def reset(opts \\ nil) do
     GenServer.cast(get_pid(opts), :reset)
+  end
+
+  def dump(opts \\ nil) do
+    GenServer.call(get_pid(opts), :dump)
   end
 
   def stop(opts) do

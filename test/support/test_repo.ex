@@ -11,8 +11,8 @@ defmodule TestRepo do
     {:ok, %{}}
   end
 
-  def dump(image, _opts), do: GenServer.call(__MODULE__, {:dump, image})
-  def load(identifier, _opts), do: GenServer.call(__MODULE__, {:load, identifier})
+  def dump(image, _opts \\ []), do: GenServer.call(__MODULE__, {:dump, image})
+  def load(identifier, _opts \\ []), do: GenServer.call(__MODULE__, {:load, identifier})
   def reset(), do: GenServer.cast(__MODULE__, :reset)
 
   def handle_call({:dump, image}, _from, state) do

@@ -19,7 +19,7 @@ defmodule Daguex.Processor.PersistImageTest do
   describe "process/1" do
     test "should persist image to given repo" do
       context = create_context(@image, "test")
-      {:ok, context} = Pipeline.call(context, [{PersistImage, [repo: TestRepo]}])
+      {:ok, _} = Pipeline.call(context, [{PersistImage, [repo: TestRepo]}])
       {:ok, _} = TestRepo.load("test", [])
     end
   end
