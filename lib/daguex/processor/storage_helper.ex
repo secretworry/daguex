@@ -6,13 +6,13 @@ defmodule Daguex.Processor.StorageHelper do
   alias Daguex.{Image, ImageFile, ImageHelper}
 
   def put_local_image(context, image_file, format) do
-    id = ImageHelper.variant_id(image_file, context.image.id, format)
+    key = ImageHelper.variant_key(image_file, context.image.key, format)
     bucket = Keyword.get(context.opts, :bucket)
     {local_storage, opts} = context.local_storage
-    with {:ok, image} <- put_image(context.image, image_file, bucket, id, format, "local", context.local_storage),
-         store_id     <- get_id(image, "local", format),
-         image        <- update_variant(image, format, id, image_file),
-         {:ok, path}  <- local_storage.get(store_id, opts),
+    with {:ok, image} <- put_image(context.image, image_file, bucket, key, format, "local", context.local_storage),
+         store_key     <- get_key(image, "local", format),
+         image        <- update_variant(image, format, key, image_file),
+         {:ok, path}  <- local_storage.get(store_key, opts),
          {:ok, image_file} <- ImageFile.from_file(path) do
       context = %{context | image: image} |> cache_local_image(format, image_file)
       {:ok, context}
@@ -25,8 +25,8 @@ defmodule Daguex.Processor.StorageHelper do
         {local_storage, opts} = context.local_storage
         case Image.get_variant(context.image, format) do
           nil -> {:error, :not_found}
-          %{"id" => id} ->
-            with {:ok, path} <- local_storage.get(id, opts),
+          %{"key" => key} ->
+            with {:ok, path} <- local_storage.get(key, opts),
                  {:ok, image_file} <- ImageFile.from_file(path) do
               context = context |> cache_local_image(format, image_file)
               {:ok, context, image_file}
@@ -46,40 +46,40 @@ defmodule Daguex.Processor.StorageHelper do
     get_in context.private, [:local_images, format]
   end
 
-  def put_image(image, image_file, bucket, id, format, storage_name, {storage, opts}) do
-    case storage.put(image_file.path, id, bucket, opts) do
-      {:ok, id} ->
-        {:ok, update_id(image, storage_name, format, id)}
-      {:ok, id, extra} ->
-        image = image |> update_id(storage_name, format, id) |> update_extra(storage_name, format, extra)
+  def put_image(image, image_file, bucket, key, format, storage_name, {storage, opts}) do
+    case storage.put(image_file.path, key, bucket, opts) do
+      {:ok, key} ->
+        {:ok, update_key(image, storage_name, format, key)}
+      {:ok, key, extra} ->
+        image = image |> update_key(storage_name, format, key) |> update_extra(storage_name, format, extra)
         {:ok, image}
       error -> error
     end
   end
 
   def get_image(image, format, storage_name, {storage, opts}) do
-    prepare_params(image, format, storage_name, fn id, extra ->
-      storage.get(id, extra, opts)
+    prepare_params(image, format, storage_name, fn key, extra ->
+      storage.get(key, extra, opts)
     end)
   end
 
   def resolve_image(image, format, storage_name, {storage, opts}) do
-    prepare_params(image, format, storage_name, fn id, extra ->
-      storage.resolve(id, extra, opts)
+    prepare_params(image, format, storage_name, fn key, extra ->
+      storage.resolve(key, extra, opts)
     end)
   end
 
   def saved?(image, storage_name, format) do
-    get_id(image, storage_name, format)
+    get_key(image, storage_name, format)
   end
 
   defp prepare_params(image, format, storage_name, callback) do
     case Image.get_variant(image, format) do
       nil -> {:error, :not_found}
       _ ->
-        id = get_id(image, storage_name, format)
+        key = get_key(image, storage_name, format)
         extra = get_extra(image, storage_name, format)
-        callback.(id, extra)
+        callback.(key, extra)
     end
   end
 
@@ -87,16 +87,16 @@ defmodule Daguex.Processor.StorageHelper do
     Image.get_data(image, ["extras", storage_name, format])
   end
 
-  def get_id(image, storage_name, format) do
+  def get_key(image, storage_name, format) do
     Image.get_data(image, ["ids", storage_name, format])
   end
 
-  def update_id(image, storage_name, format, id) do
-    Image.put_data(image, ["ids", storage_name, format], id)
+  def update_key(image, storage_name, format, key) do
+    Image.put_data(image, ["ids", storage_name, format], key)
   end
 
-  def update_variant(image, format, id, image_file) do
-    Image.add_variant(image, format, id, image_file.width, image_file.height, image_file.type)
+  def update_variant(image, format, key, image_file) do
+    Image.add_variant(image, format, key, image_file.width, image_file.height, image_file.type)
   end
 
   def update_extra(image, storage_name, format, extra) do

@@ -14,9 +14,9 @@ defmodule Daguex.Processor.ResolveImage do
     format = Keyword.get(context.opts, :format)
     result = Enum.find_value(storages, fn {name, storage, opts} ->
       if saved?(context.image, name, format) do
-        id = get_id(context.image, name, format)
+        key = get_key(context.image, name, format)
         extra = get_extra(context.image, name, format)
-        case storage.resolve(id, extra, opts) do
+        case storage.resolve(key, extra, opts) do
           {:ok, url} -> url
           {:error, :not_found} -> nil
           {:error, _} = error -> error

@@ -23,9 +23,9 @@ defmodule DaguexTest do
       end
 
       {:ok, image_file} = ImageFile.from_file(@image)
-      assert {:ok, "id"} == TestDaguex.put(image_file, "id", bucket: "bucket")
-      {:ok, %{id: id, width: width, height: height, variants: variants} = image} = TestRepo.load("id")
-      assert ["id", image_file.width, image_file.height] == [id, width, height]
+      assert {:ok, "key"} == TestDaguex.put(image_file, "key", bucket: "bucket")
+      {:ok, %{key: key, width: width, height: height, variants: variants} = image} = TestRepo.load("key")
+      assert ["key", image_file.width, image_file.height] == [key, width, height]
       assert ["orig", "s100"] == Map.keys(variants)
 
       storage_opts = TestStorage.init(pid: pid)
@@ -45,8 +45,8 @@ defmodule DaguexTest do
         variant "s100", Daguex.Variant.DefaultConverter, size: "100x100"
       end
       {:ok, image_file} = ImageFile.from_file(@image)
-      {:ok, id} = ResolveDaguex.put(image_file, "id", bucket: "bucket")
-      {:ok, _url} = ResolveDaguex.resolve(id, "s100", [])
+      {:ok, key} = ResolveDaguex.put(image_file, "key", bucket: "bucket")
+      {:ok, _url} = ResolveDaguex.resolve(key, "s100", [])
     end
   end
 
@@ -61,8 +61,8 @@ defmodule DaguexTest do
         variant "s100", Daguex.Variant.DefaultConverter, size: "100x100"
       end
       {:ok, image_file} = ImageFile.from_file(@image)
-      {:ok, id} = GetDaguex.put(image_file, "id", bucket: "bucket")
-      {:ok, _path} = GetDaguex.get(id, "s100", [])
+      {:ok, key} = GetDaguex.put(image_file, "key", bucket: "bucket")
+      {:ok, _path} = GetDaguex.get(key, "s100", [])
     end
   end
 end

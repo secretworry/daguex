@@ -15,8 +15,8 @@ defmodule Daguex.Builder do
       Module.register_attribute __MODULE__,
         :repo, accumulate: false, persist: false
 
-      def put(image_file, id, opts) do
-        builder_put_call(image_file, id, opts)
+      def put(image_file, key, opts) do
+        builder_put_call(image_file, key, opts)
       end
 
       def get(id_or_image, format \\ "orig", opts)
@@ -66,12 +66,12 @@ defmodule Daguex.Builder do
 
       def has_format?(format), do: Enum.member?(unquote(formats), format)
 
-      def builder_put_call(image_file, id, opts) do
-        image = Daguex.Image.from_image_file(image_file, id)
+      def builder_put_call(image_file, key, opts) do
+        image = Daguex.Image.from_image_file(image_file, key)
         context = %Daguex.Pipeline.Context{image: image, local_storage: unquote(local_storage), opts: opts}
         with {:ok, context} <- Daguex.Processor.StorageHelper.put_local_image(context, image_file, "orig"),
              {:ok, context} <- do_process(context),
-         do: {:ok, context.image.id}
+         do: {:ok, context.image.key}
       end
 
       defp do_process(context) do
@@ -94,7 +94,7 @@ defmodule Daguex.Builder do
       end
 
       defp do_get(context) do
-        Daguex.pipeline.call(context, unquote(get_pipeline))
+        Daguex.Pipeline.call(context, unquote(get_pipeline))
       end
 
       def builder_get_call(identifier, format, opts) do

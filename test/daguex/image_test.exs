@@ -3,7 +3,7 @@ defmodule Daguex.ImageTest do
 
   alias Daguex.Image
 
-  @default_image %Image{id: "id", width: 100, height: 100, type: "png"}
+  @default_image %Image{key: "key", width: 100, height: 100, type: "png"}
 
   describe "get_data/3" do
     test "should get nil for data not exist" do
@@ -46,7 +46,7 @@ defmodule Daguex.ImageTest do
   describe "add_variant/6" do
     test "should add given variant to image" do
       image = Image.add_variant(@default_image, "test", "test", 100, 100, "png")
-      expected_variant = %{"height" => 100, "id" => "test", "type" => "png", "width" => 100}
+      expected_variant = %{"height" => 100, "key" => "test", "type" => "png", "width" => 100}
       assert expected_variant == image |> Image.get_variant("test")
     end
   end
@@ -57,7 +57,7 @@ defmodule Daguex.ImageTest do
     end
 
     test "should return true for a persisted variant" do
-      image = %{@default_image | variants: %{"test" => %{"height" => 100, "id" => "test", "type" => "png", "width" => 100}}}
+      image = %{@default_image | variants: %{"test" => %{"height" => 100, "key" => "test", "type" => "png", "width" => 100}}}
       assert Image.has_variant?(image, "test")
     end
 
@@ -74,7 +74,7 @@ defmodule Daguex.ImageTest do
     end
 
     test "should remove a persisted variant" do
-      image = %{@default_image | variants: %{"test" => %{"height" => 100, "id" => "test", "type" => "png", "width" => 100}}}
+      image = %{@default_image | variants: %{"test" => %{"height" => 100, "key" => "test", "type" => "png", "width" => 100}}}
       image = image |> Image.rm_variant("test")
       refute Image.has_variant?(image, "test")
     end
@@ -90,12 +90,12 @@ defmodule Daguex.ImageTest do
     test "should apply an adding modification" do
       image = @default_image |> Image.add_variant("test", "test", 100, 100, "png")
       image = image |> Image.apply_variants_mod()
-      expect = %{"test" => %{"height" => 100, "id" => "test", "type" => "png", "width" => 100}}
+      expect = %{"test" => %{"height" => 100, "key" => "test", "type" => "png", "width" => 100}}
       assert expect == image.variants
     end
 
     test "should apply a removing modification" do
-      image = %{@default_image | variants: %{"test" => %{"height" => 100, "id" => "test", "type" => "png", "width" => 100}}}
+      image = %{@default_image | variants: %{"test" => %{"height" => 100, "key" => "test", "type" => "png", "width" => 100}}}
       image = image |> Image.rm_variant("test") |> Image.apply_variants_mod()
       assert %{} == image.variants
     end

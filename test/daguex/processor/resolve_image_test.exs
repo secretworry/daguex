@@ -25,7 +25,7 @@ defmodule Daguex.Processor.ResolveImageTest do
       context = create_context(@image, "image") |> Context.put_opts(:format, "format")
       image_file = ImageFile.from_file!(@image)
       {:ok, context} = put_local_image(context, image_file, "format")
-      {:ok, image} = put_image(context.image, image_file, nil, "id", "format", storage_name, {TestStorage, []})
+      {:ok, image} = put_image(context.image, image_file, nil, "key", "format", storage_name, {TestStorage, []})
       context = %{context | image: image}
       {:ok, context} = ResolveImage.process(context, processor_opts)
       assert "file://test/support/daguex.png" == ResolveImage.get_url(context)

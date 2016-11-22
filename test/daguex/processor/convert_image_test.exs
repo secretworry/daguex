@@ -24,13 +24,13 @@ defmodule Daguex.Processor.ConvertImageTest do
         variants: [%Variant{format: "s100", converter: DefaultConverter, opts: [size: "100x100"]}, %Variant{format: "s50", converter: DefaultConverter, opts: [size: "50x50"]}])
       context = create_context(@image)
       {:ok, context} = ConvertImage.process(context, options)
-      expect_variants = %{"s100" => %{"height" => 100, "id" => "daguex_s100_100_100.png", "type" => "png", "width" => 100},
-                          "s50" => %{"height" => 50, "id" => "daguex_s50_50_50.png", "type" => "png", "width" => 50},
-                          "orig" => %{"height" => 200, "id" => "daguex_200_200.png", "type" => "png", "width" => 200}}
+      expect_variants = %{"s100" => %{"height" => 100, "key" => "daguex_s100_100_100.png", "type" => "png", "width" => 100},
+                          "s50" => %{"height" => 50, "key" => "daguex_s50_50_50.png", "type" => "png", "width" => 50},
+                          "orig" => %{"height" => 200, "key" => "daguex_200_200.png", "type" => "png", "width" => 200}}
       variants = (context.image |> Image.apply_variants_mod).variants
       assert expect_variants == variants
-      {:ok, _} = TestStorage.get(variants["s100"]["id"], [])
-      {:ok, _} = TestStorage.get(variants["s50"]["id"], [])
+      {:ok, _} = TestStorage.get(variants["s100"]["key"], [])
+      {:ok, _} = TestStorage.get(variants["s50"]["key"], [])
     end
 
     test "should convert image to specified format" do
@@ -40,11 +40,11 @@ defmodule Daguex.Processor.ConvertImageTest do
       context = create_context(@image)
       context = put_in context.opts, [format: "s100"]
       {:ok, context} = ConvertImage.process(context, options)
-      expect_variants = %{"s100" => %{"height" => 100, "id" => "daguex_s100_100_100.png", "type" => "png", "width" => 100},
-                          "orig" => %{"height" => 200, "id" => "daguex_200_200.png", "type" => "png", "width" => 200}}
+      expect_variants = %{"s100" => %{"height" => 100, "key" => "daguex_s100_100_100.png", "type" => "png", "width" => 100},
+                          "orig" => %{"height" => 200, "key" => "daguex_200_200.png", "type" => "png", "width" => 200}}
       variants = (context.image |> Image.apply_variants_mod).variants
       assert expect_variants == variants
-      {:ok, _} = TestStorage.get(variants["s100"]["id"], [])
+      {:ok, _} = TestStorage.get(variants["s100"]["key"], [])
     end
   end
 end

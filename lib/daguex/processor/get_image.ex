@@ -1,4 +1,4 @@
-defmodule GetImage do
+defmodule Daguex.Processor.GetImage do
   use Daguex.Processor
 
   import Daguex.Processor.StorageHelper
@@ -13,9 +13,9 @@ defmodule GetImage do
     format = Keyword.get(context.opts, :format)
     result = Enum.find_value(storages, fn {name, storage, opts} ->
       if saved?(context.image, name, format) do
-        id = get_id(context.image, name, format)
+        key = get_key(context.image, name, format)
         extra = get_extra(context.image, name, format)
-        case storage.get(id, extra, opts) do
+        case storage.get(key, extra, opts) do
           {:ok, image} -> image
           {:error, :not_found} -> nil
           {:error, _} = error -> error

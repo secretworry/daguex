@@ -13,12 +13,12 @@ defmodule TestStorage do
       {:ok, %{}}
     end
 
-    def handle_call({:put, path, id, bucket}, _from, state) do
-      id = case bucket do
-        nil -> id
-        _ -> "#{bucket}/#{id}"
+    def handle_call({:put, path, key, bucket}, _from, state) do
+      key = case bucket do
+        nil -> key
+        _ -> "#{bucket}/#{key}"
       end
-      {:reply, {:ok, id}, Map.put(state, id, path)}
+      {:reply, {:ok, key}, Map.put(state, key, path)}
     end
 
     def handle_call({:get, identifier, _extra}, _from, state) do
@@ -64,8 +64,8 @@ defmodule TestStorage do
     %{pid: Keyword.get(opts, :pid, Handler)}
   end
 
-  def put(path, id, bucket \\ nil, opts) do
-    GenServer.call(get_pid(opts), {:put, path, id, bucket})
+  def put(path, key, bucket \\ nil, opts) do
+    GenServer.call(get_pid(opts), {:put, path, key, bucket})
   end
 
   def get(identifier, extra \\ nil, opts) do

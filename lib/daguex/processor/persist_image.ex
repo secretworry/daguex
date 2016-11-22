@@ -26,7 +26,7 @@ defmodule Daguex.Processor.PersistImage do
   end
 
   defp process_dump_result({:error, :modified}, context, %{repo: repo} = opts, attempts) do
-    case repo.load(context.image.id, context.opts) do
+    case repo.load(context.image.key, context.opts) do
       {:ok, new_image} -> merge_image(context.image, new_image) |> do_dump(context, opts, attempts + 1)
       {:error, :not_found} ->
         context.image |> apply_image_modifications |> do_dump(context, opts, attempts + 1)

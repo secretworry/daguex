@@ -1,11 +1,11 @@
 defmodule Daguex.Image do
 
-  @type id :: String.t
+  @type key :: String.t
   @type variant_t :: %{identifier: identifier, width: integer, height: integer, type: Daguex.ImageFile.type}
   @type format :: String.t
 
   @type t :: %__MODULE__{
-    id: id,
+    key: key,
     width: integer,
     height: integer,
     type: String.t,
@@ -15,9 +15,9 @@ defmodule Daguex.Image do
     data_mod: Map.t
   }
 
-  @enforce_keys [:id, :width, :height, :type]
+  @enforce_keys [:key, :width, :height, :type]
   defstruct [
-    id: nil,
+    key: nil,
     width: 0,
     height: 0,
     type: nil,
@@ -27,17 +27,17 @@ defmodule Daguex.Image do
     data_mod: %{}
   ]
 
-  def from_image_file(%Daguex.ImageFile{} = image_file, id) do
-    %__MODULE__{id: id, width: image_file.width, height: image_file.height, type: image_file.type}
+  def from_image_file(%Daguex.ImageFile{} = image_file, key) do
+    %__MODULE__{key: key, width: image_file.width, height: image_file.height, type: image_file.type}
   end
 
-  @spec add_variant(t, format, id, integer, integer, Daguex.ImageFile.type) :: t
-  def add_variant(image = %__MODULE__{variants_mod: variants_mod}, format, id, width, height, type) do
-    %{image | variants_mod: Map.put(variants_mod, format, build_variant(id, width, height, type))}
+  @spec add_variant(t, format, key, integer, integer, Daguex.ImageFile.type) :: t
+  def add_variant(image = %__MODULE__{variants_mod: variants_mod}, format, key, width, height, type) do
+    %{image | variants_mod: Map.put(variants_mod, format, build_variant(key, width, height, type))}
   end
 
-  defp build_variant(id, width, height, type) do
-    %{"id" => id, "width" => width, "height" => height, "type" => type}
+  defp build_variant(key, width, height, type) do
+    %{"key" => key, "width" => width, "height" => height, "type" => type}
   end
 
   def rm_variant(image = %__MODULE__{variants_mod: variants_mod}, format) do
@@ -82,7 +82,7 @@ defmodule Daguex.Image do
   end
 
   def variants_with_origal(image) do
-    variants(image) |> Map.put("orig", build_variant(image.id, image.width, image.height, image.type))
+    variants(image) |> Map.put("orig", build_variant(image.key, image.width, image.height, image.type))
   end
 
   def put_data(image = %__MODULE__{data_mod: data_mod}, keys, value) do

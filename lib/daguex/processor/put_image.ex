@@ -18,10 +18,10 @@ defmodule Daguex.Processor.PutImage do
 
   def async_process(context, %{storage: {storage, opts}, name: name, variants: variants}) do
     bucket = Keyword.get(context.opts, :bucket)
-    Enum.reduce_while(variants, {:ok, []}, fn {format, %{"id" => id}, image_file}, {:ok, acc} ->
-      case storage.put(image_file.path, id, bucket, opts) do
-        {:ok, identifier} -> {:cont, {:ok, [%{storage_name: name, format: format, id: identifier} | acc]}}
-        {:ok, identifier, extra} -> {:cont, {:ok, [%{storage_name: name, format: format, id: identifier, extra: extra}|acc]}}
+    Enum.reduce_while(variants, {:ok, []}, fn {format, %{"key" => key}, image_file}, {:ok, acc} ->
+      case storage.put(image_file.path, key, bucket, opts) do
+        {:ok, identifier} -> {:cont, {:ok, [%{storage_name: name, format: format, key: identifier} | acc]}}
+        {:ok, identifier, extra} -> {:cont, {:ok, [%{storage_name: name, format: format, key: identifier, extra: extra}|acc]}}
         error -> {:halt, error}
       end
     end)
@@ -29,11 +29,11 @@ defmodule Daguex.Processor.PutImage do
 
   def post_process(context, data) do
     Enum.reduce(data, {:ok, context}, fn
-      %{storage_name: name, format: format, id: id}, {:ok, context} ->
-        image = context.image |> update_id(name, format, id)
+      %{storage_name: name, format: format, key: key}, {:ok, context} ->
+        image = context.image |> update_key(name, format, key)
         {:ok, %{context | image: image}}
-      %{storage_name: name, format: format, id: id, extra: extra}, {:ok, context} ->
-        image = context.image |> update_id(name, format, id) |> update_extra(name, format, extra)
+      %{storage_name: name, format: format, key: key, extra: extra}, {:ok, context} ->
+        image = context.image |> update_key(name, format, key) |> update_extra(name, format, extra)
         {:ok, %{context | image: image}}
     end)
   end

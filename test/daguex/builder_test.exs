@@ -7,13 +7,13 @@ defmodule Daguex.BuilderTest do
       opts
     end
 
-    def put(_path, id, _bucket \\ nil, _opts), do: {:ok, id}
+    def put(_path, key, _bucket \\ nil, _opts), do: {:ok, key}
 
-    def get(_id, _extra \\ nil, _opts), do: {:error, :not_found}
+    def get(_key, _extra \\ nil, _opts), do: {:error, :not_found}
 
-    def resolve(_id, _extra \\ nil, _opts), do: {:error, :not_found}
+    def resolve(_key, _extra \\ nil, _opts), do: {:error, :not_found}
 
-    def rm(_id, _extra \\ nil, _opts), do: {:error, :not_found}
+    def rm(_key, _extra \\ nil, _opts), do: {:error, :not_found}
   end
 
   defmodule TestDaguex do

@@ -31,27 +31,27 @@ defmodule Daguex.LocalStorageTest do
   describe "put/3" do
     test "should put the image to the specified directory" do
       options = LocalStorage.init([base_path: @base_path])
-      id = "daguex.png"
-      {:ok, id} = LocalStorage.put(@image, id, "test", options)
-      {:ok, _} = LocalStorage.get(id, options)
+      key = "daguex.png"
+      {:ok, key} = LocalStorage.put(@image, key, "test", options)
+      {:ok, _} = LocalStorage.get(key, options)
     end
   end
 
   describe "resolve/2" do
     test "should resolve to a local file if no assets_url is given" do
       options = LocalStorage.init([base_path: @base_path])
-      id = "daguex.png"
-      {:ok, id} = LocalStorage.put(@image, id, "test", options)
-      {:ok, url} = LocalStorage.resolve(id, options)
+      key = "daguex.png"
+      {:ok, key} = LocalStorage.put(@image, key, "test", options)
+      {:ok, url} = LocalStorage.resolve(key, options)
       "file://" <> _ = url
     end
 
     test "should resolve image according to given assets_url" do
       assets_url = "http://example.com/images/"
       options = LocalStorage.init([base_path: @base_path, assets_url: assets_url])
-      id = "daguex.png"
-      {:ok, id} = LocalStorage.put(@image, id, "test", options)
-      {:ok, url} = LocalStorage.resolve(id, options)
+      key = "daguex.png"
+      {:ok, key} = LocalStorage.put(@image, key, "test", options)
+      {:ok, url} = LocalStorage.resolve(key, options)
       assert String.starts_with?(url, assets_url)
     end
   end
@@ -59,10 +59,10 @@ defmodule Daguex.LocalStorageTest do
   describe "rm/2" do
     test "should remove a saved image" do
       options = LocalStorage.init([base_path: @base_path])
-      id = "daguex.png"
-      {:ok, id} = LocalStorage.put(@image, id, "test", options)
-      :ok = LocalStorage.rm(id, options)
-      assert {:error, :not_found} == LocalStorage.get(id, options)
+      key = "daguex.png"
+      {:ok, key} = LocalStorage.put(@image, key, "test", options)
+      :ok = LocalStorage.rm(key, options)
+      assert {:error, :not_found} == LocalStorage.get(key, options)
     end
   end
 end
