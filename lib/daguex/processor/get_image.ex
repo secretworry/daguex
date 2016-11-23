@@ -11,6 +11,7 @@ defmodule Daguex.Processor.GetImage do
 
   def process(context, %{storages: storages}) do
     format = Keyword.get(context.opts, :format)
+    storages = storages |> prepend_local_storage(context)
     result = Enum.find_value(storages, fn {name, storage, opts} ->
       if saved?(context.image, name, format) do
         key = get_key(context.image, name, format)
@@ -29,6 +30,11 @@ defmodule Daguex.Processor.GetImage do
       {:error, _} = error -> error
       url -> {:ok, context |> put_image(url)}
     end
+  end
+
+  defp prepend_local_storage(storages, context) do
+    {storage, opts} = context.local_storage
+    [{"local", storage, opts} | storages]
   end
 
   def put_image(context, image) do
