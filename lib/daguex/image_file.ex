@@ -40,8 +40,8 @@ defmodule Daguex.ImageFile do
     end
   end
 
-  def local?(%__MODULE__{uri: %{schema: schema}} = image) do
-    case schema do
+  def local?(%__MODULE__{uri: %{scheme: scheme}} = image) do
+    case scheme do
       nil -> true
       "file" -> true
       _ -> false

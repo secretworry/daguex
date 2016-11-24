@@ -67,11 +67,15 @@ defmodule Daguex.Builder do
       def has_format?(format), do: Enum.member?(unquote(formats), format)
 
       def builder_put_call(image_file, key, opts) do
-        image = Daguex.Image.from_image_file(image_file, key)
-        context = %Daguex.Pipeline.Context{image: image, local_storage: unquote(local_storage), opts: opts}
-        with {:ok, context} <- Daguex.Processor.StorageHelper.put_local_image(context, image_file, "orig"),
-             {:ok, context} <- do_process(context),
-         do: {:ok, context.image.key}
+        if Daguex.ImageFile.local?(image_file) do
+          image = Daguex.Image.from_image_file(image_file, key)
+          context = %Daguex.Pipeline.Context{image: image, local_storage: unquote(local_storage), opts: opts}
+          with {:ok, context} <- Daguex.Processor.StorageHelper.put_local_image(context, image_file, "orig"),
+               {:ok, context} <- do_process(context),
+           do: {:ok, context.image.key}
+        else
+          {:error, "Cannot put a non-local ImageFile"}
+        end
       end
 
       defp do_process(context) do

@@ -8,13 +8,20 @@ defmodule DaguexTest do
     [local_storage_pid: pid]
   end
 
+  defmodule TestDaguex do
+    use Daguex.Builder
+    local_storage TestStorage
+    repo TestRepo
+    variant "s100", Daguex.Variant.DefaultConverter, size: "100x100"
+  end
+
   @image "test/support/daguex.png"
 
   describe "put/3" do
     test "should work without error", context do
       pid = Map.get(context, :local_storage_pid)
 
-      defmodule TestDaguex do
+      defmodule PutDaguex do
         use Daguex.Builder
         local_storage TestStorage
         repo TestRepo
@@ -23,7 +30,7 @@ defmodule DaguexTest do
       end
 
       {:ok, image_file} = ImageFile.from_file(@image)
-      assert {:ok, "key"} == TestDaguex.put(image_file, "key", bucket: "bucket")
+      assert {:ok, "key"} == PutDaguex.put(image_file, "key", bucket: "bucket")
       {:ok, %{key: key, width: width, height: height, variants: variants} = image} = TestRepo.load("key")
       assert ["key", image_file.width, image_file.height] == [key, width, height]
       assert ["orig", "s100"] == Map.keys(variants)
@@ -31,6 +38,11 @@ defmodule DaguexTest do
       storage_opts = TestStorage.init(pid: pid)
       {:ok, _} = Daguex.Processor.StorageHelper.get_image(image, "orig", "test", {TestStorage, storage_opts})
       {:ok, _} = Daguex.Processor.StorageHelper.get_image(image, "s100", "test", {TestStorage, storage_opts})
+    end
+
+    test "should reject putting a non-local image_file" do
+      image_file = ImageFile.build("http://example.com/images/test.png", "png", 100, 100)
+      assert {:error, "Cannot put a non-local ImageFile"} == TestDaguex.put(image_file, "key", [])
     end
   end
 
