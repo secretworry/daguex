@@ -83,12 +83,12 @@ defmodule Daguex.Builder do
       def builder_get_image_call(image, format, opts) do
         context = %Daguex.Pipeline.Context{image: image, local_storage: unquote(local_storage), opts: opts |> Keyword.merge(format: format)}
         with {:ok, context} <- do_get(context) do
-          {:ok, Daguex.Processor.GetImage.get_image(context)}
+          {:ok, Daguex.Processor.GetImage.get_result(context)}
         else
           {:error, :not_found} ->
             with {:ok, context} <- do_process(context),
                  {:ok, context} <- do_get(context),
-             do: {:ok, Daguex.Processor.GetImage.get_image(context)}
+             do: {:ok, Daguex.Processor.GetImage.get_result(context)}
           error -> error
         end
       end
@@ -107,12 +107,12 @@ defmodule Daguex.Builder do
       def builder_resolve_image_call(image, format, opts) do
         context = %Daguex.Pipeline.Context{image: image, local_storage: unquote(local_storage), opts: opts |> Keyword.merge(format: format)}
         with {:ok, context} <- do_resolve(context) do
-          {:ok, Daguex.Processor.ResolveImage.get_url(context)}
+          {:ok, Daguex.Processor.ResolveImage.get_result(context)}
         else
           {:error, :not_found} ->
             with {:ok, context} <- do_process(context),
                  {:ok, context} <- do_resolve(context),
-             do: {:ok, Daguex.Processor.ResolveImage.get_url(context)}
+             do: {:ok, Daguex.Processor.ResolveImage.get_result(context)}
           error -> error
         end
       end

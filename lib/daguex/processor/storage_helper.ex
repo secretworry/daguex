@@ -47,7 +47,7 @@ defmodule Daguex.Processor.StorageHelper do
   end
 
   def put_image(image, image_file, bucket, key, format, storage_name, {storage, opts}) do
-    case storage.put(image_file.path, key, bucket, opts) do
+    case storage.put(image_file.uri |> to_string, key, bucket, opts) do
       {:ok, key} ->
         {:ok, update_key(image, storage_name, format, key)}
       {:ok, key, extra} ->

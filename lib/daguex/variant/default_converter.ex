@@ -14,7 +14,7 @@ defmodule Daguex.Variant.DefaultConverter do
     prefix = Keyword.get(opts, :prefix, "default_converter")
     case Daguex.TempFile.temp_file(prefix) do
       {:ok, path} ->
-        open(image.path) |> resize_to_fill(size) |> save(path: path)
+        open(image.uri |> to_string) |> resize_to_fill(size) |> save(path: path)
         Daguex.ImageFile.from_file(path)
       error -> {:erro, "Cannot create temporay file for #{inspect error}"}
     end

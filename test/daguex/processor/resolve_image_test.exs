@@ -28,7 +28,8 @@ defmodule Daguex.Processor.ResolveImageTest do
       {:ok, image} = put_image(context.image, image_file, nil, "key", "format", storage_name, {TestStorage, []})
       context = %{context | image: image}
       {:ok, context} = ResolveImage.process(context, processor_opts)
-      assert "file://test/support/daguex.png" == ResolveImage.get_url(context)
+      expect_uri = ("file://" <> (@image |> Path.expand(File.cwd!))) |> URI.parse
+      assert expect_uri == ResolveImage.get_result(context).uri
     end
   end
 end

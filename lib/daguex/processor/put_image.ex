@@ -19,7 +19,7 @@ defmodule Daguex.Processor.PutImage do
   def async_process(context, %{storage: {storage, opts}, name: name, variants: variants}) do
     bucket = Keyword.get(context.opts, :bucket)
     Enum.reduce_while(variants, {:ok, []}, fn {format, %{"key" => key}, image_file}, {:ok, acc} ->
-      case storage.put(image_file.path, key, bucket, opts) do
+      case storage.put(image_file.uri |> to_string, key, bucket, opts) do
         {:ok, identifier} -> {:cont, {:ok, [%{storage_name: name, format: format, key: identifier} | acc]}}
         {:ok, identifier, extra} -> {:cont, {:ok, [%{storage_name: name, format: format, key: identifier, extra: extra}|acc]}}
         error -> {:halt, error}

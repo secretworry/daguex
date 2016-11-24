@@ -8,8 +8,8 @@ defmodule Daguex do
   @type key :: String.t
   @type error :: any
 
-  @type get_result_t :: {:ok, String.t} | {:error, :not_found} | {:error, error}
-  @type resolve_result_t :: {:ok, url} | {:error, :not_found} | {:error, error}
+  @type get_result_t :: {:ok, ImageFile.t} | {:error, :not_found} | {:error, error}
+  @type resolve_result_t :: {:ok, ImageFile.t} | {:error, :not_found} | {:error, error}
 
   @callback put(ImageFile.t, key, opts) :: {:ok, key} | {:error, error}
 

@@ -12,24 +12,26 @@ defmodule Daguex.Processor.GetImage do
   def process(context, %{storages: storages}) do
     format = Keyword.get(context.opts, :format)
     storages = storages |> prepend_local_storage(context)
-    result = Enum.find_value(storages, fn {name, storage, opts} ->
-      if saved?(context.image, name, format) do
-        key = get_key(context.image, name, format)
-        extra = get_extra(context.image, name, format)
+    with {:ok, image_file} <- do_get(context.image, format, storages) do
+      {:ok, context |> put_result(image_file)}
+    end
+  end
+
+  defp do_get(image, format, storages) do
+    Enum.find_value(storages, fn {name, storage, opts} ->
+      if saved?(image, name, format) do
+        key = get_key(image, name, format)
+        extra = get_extra(image, name, format)
         case storage.get(key, extra, opts) do
-          {:ok, image} -> image
+          {:ok, path} -> Daguex.ImageFile.from_file(path)
           {:error, :not_found} -> nil
           {:error, _} = error -> error
+          other -> raise "storage.get/3 should either return {:ok, path} or {:error, any}, but got #{inspect other}"
         end
       else
         nil
       end
-    end)
-    case result do
-      nil -> {:error, :not_found}
-      {:error, _} = error -> error
-      url -> {:ok, context |> put_image(url)}
-    end
+    end) || {:error, :not_found}
   end
 
   defp prepend_local_storage(storages, context) do
@@ -37,11 +39,11 @@ defmodule Daguex.Processor.GetImage do
     [{"local", storage, opts} | storages]
   end
 
-  def put_image(context, image) do
+  def put_result(context, image) do
     Context.put_private(context, __MODULE__, image)
   end
 
-  def get_image(context) do
+  def get_result(context) do
     Context.get_private(context, __MODULE__)
   end
 
