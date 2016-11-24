@@ -22,9 +22,9 @@ defmodule Daguex.LocalStorageTest do
     end
 
     test "should normalize the given base_path" do
-      path = "."
+      path = "/tmp/test"
       [base_path: base_path] = LocalStorage.init([base_path: path])
-      assert base_path == Path.expand(path, File.cwd!) <> "/"
+      assert base_path == path <> "/"
     end
   end
 

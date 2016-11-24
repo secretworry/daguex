@@ -17,14 +17,10 @@ defmodule Daguex.LocalStorage do
       {:ok, base_path} -> base_path
       :error -> raise ArgumentError, "base_path is required for `#{inspect __MODULE__}`"
     end
-    case check_and_normalize_base_path(base_path) do
+    case normalize_base_path(base_path) do
       {:ok, path} -> Keyword.put(opts, :base_path, path)
       {:error, error} -> raise ArgumentError, error
     end
-  end
-
-  def init(_) do
-    raise ArgumentError, "base_path is required for `#{inspect __MODULE__}`"
   end
 
   def put(path, identifier, bucket \\ nil, opts) do
@@ -80,26 +76,18 @@ defmodule Daguex.LocalStorage do
     end
   end
 
-  defp check_and_normalize_base_path(base_path) do
-    with {:ok, stat} <- File.stat(base_path) do
-      case stat do
-        %{access: :read_write} -> {:ok, base_path |> normalize_base_path}
-        _ -> {:error, "Illegal access #{stat.acess} for #{base_path}"}
-      end
-    end
-  end
-
-
   defp get_base_path(opts) do
     Keyword.get(opts, :base_path)
   end
 
   defp normalize_base_path(base_path) do
-    base_path = case base_path do
-      "/" <> _ -> base_path
-      _ -> Path.expand(base_path, File.cwd!)
+    case base_path do
+      "/" <> _ ->
+        base_path = if String.ends_with?(base_path, "/"), do: base_path, else: base_path <> "/"
+        {:ok, base_path}
+      _ ->
+        {:error, "base_path for #{inspect __MODULE__} should be an absolute path but got #{base_path}"}
     end
-    if String.ends_with?(base_path, "/"), do: base_path, else: base_path <> "/"
   end
 
 end
