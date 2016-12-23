@@ -28,12 +28,28 @@ defmodule Daguex.LocalStorageTest do
     end
   end
 
+  describe "get/2" do
+    test "should return {:error, :not_found} for image not exist" do
+      options = LocalStorage.init([base_path: @base_path])
+      key = "not-exist.png"
+      assert {:error, :not_found}
+          == LocalStorage.get(key, options)
+    end
+
+    test "should return {:ok, path} for image exist" do
+      options = LocalStorage.init([base_path: @base_path])
+      key = "daguex.png"
+      {:ok, key} = LocalStorage.put(@image, key, "test", options)
+      {:ok, path} = LocalStorage.get(key, options)
+      assert File.exists?(path)
+    end
+  end
+
   describe "put/3" do
     test "should put the image to the specified directory" do
       options = LocalStorage.init([base_path: @base_path])
       key = "daguex.png"
-      {:ok, key} = LocalStorage.put(@image, key, "test", options)
-      {:ok, _} = LocalStorage.get(key, options)
+      {:ok, _} = LocalStorage.put(@image, key, "test", options)
     end
   end
 

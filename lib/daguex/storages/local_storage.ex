@@ -10,7 +10,7 @@ defmodule Daguex.LocalStorage do
                   if not specified, the resolve function will return a file url
   """
 
-  alias Daguex.ImageFile
+  @behaviour Dageux.Storage
 
   def init(opts) do
     base_path = case Keyword.fetch(opts, :base_path) do
@@ -51,7 +51,7 @@ defmodule Daguex.LocalStorage do
     base_path = get_base_path(opts)
     target_path = Path.join(base_path, identifier)
     if File.exists?(target_path) do
-      {:ok, ImageFile.from_file(target_path)}
+      {:ok, target_path}
     else
       {:error, :not_found}
     end
