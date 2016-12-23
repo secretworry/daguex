@@ -16,6 +16,7 @@ defmodule Daguex.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [applications: [:logger],
+     mod: {Daguex, []},
      env: [post_processors: [Daguex.Pipeline.AsyncPostProcessor]]]
   end
 
