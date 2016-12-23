@@ -4,8 +4,6 @@ defmodule Daguex.Variant.DefaultConverter do
 
   import Mogrify
 
-  alias Daguex.ImageFile
-
   def init([size: size] = opts) when is_binary(size), do: opts
 
   def init(_opts), do: raise ArgumentError, "options size is required for `#{__MODULE__}`"

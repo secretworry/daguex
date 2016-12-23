@@ -3,8 +3,6 @@ defmodule Dageux.Storage do
   Behaviour for a image storage
   """
 
-  alias Daguex.ImageFile
-
   @type t :: module
   @type opts :: keyword
   @type path :: String.t

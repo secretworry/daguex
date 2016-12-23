@@ -11,7 +11,7 @@ defmodule Daguex.Processor.ConvertImage do
 
   use Daguex.Processor
 
-  alias Daguex.{LocalImage, Image, Variant}
+  alias Daguex.{Image, Variant}
   import Daguex.Processor.StorageHelper
 
   def init(opts) do
