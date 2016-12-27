@@ -62,7 +62,7 @@ defmodule Daguex.LocalStorage do
     case Keyword.fetch(opts, :assets_url) do
       {:ok, assets_url} ->
         {:ok, "#{assets_url}#{identifier}"}
-      :error -> {:ok, "file://" <> Path.join(get_base_path(opts), identifier)}
+      :error -> {:ok, Path.join(get_base_path(opts), identifier)}
     end
   end
 

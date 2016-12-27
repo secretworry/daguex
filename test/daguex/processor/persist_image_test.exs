@@ -27,11 +27,11 @@ defmodule Daguex.Processor.PersistImageTest do
     test "should persist a stale image" do
       defmodule StaleRepo do
         @behaviour Daguex.Repo
-        def dump(image, updater, opts \\ []) do
+        def dump(image, updater, _opts \\ []) do
           {:ok, updater.(image)}
         end
 
-        def load(image, opts \\[]) do
+        def load(_image, _opts \\ []) do
         end
       end
 

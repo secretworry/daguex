@@ -49,7 +49,9 @@ defmodule Daguex.LocalStorageTest do
     test "should put the image to the specified directory" do
       options = LocalStorage.init([base_path: @base_path])
       key = "daguex.png"
-      {:ok, _} = LocalStorage.put(@image, key, "test", options)
+      {:ok, identifier} = LocalStorage.put(@image, key, "test", options)
+      {:ok, path} = LocalStorage.resolve(identifier, options)
+      assert File.exists?(path)
     end
   end
 
@@ -59,7 +61,7 @@ defmodule Daguex.LocalStorageTest do
       key = "daguex.png"
       {:ok, key} = LocalStorage.put(@image, key, "test", options)
       {:ok, url} = LocalStorage.resolve(key, options)
-      "file://" <> _ = url
+      assert String.starts_with?(url, @base_path)
     end
 
     test "should resolve image according to given assets_url" do
