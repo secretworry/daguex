@@ -28,7 +28,7 @@ defmodule Daguex.Processor.PersistImage do
   end
 
   defp merge_image(old_image, new_image) do
-    image = Image.apply_variants_mod(old_image.viarants_mod, new_image)
+    image = Image.apply_variants_mod(old_image.variants_mod, new_image)
     image = Image.apply_data_mod(old_image.data_mod, image)
     image
   end

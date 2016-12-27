@@ -2,6 +2,7 @@ defmodule Daguex.Processor.PersistImageTest do
 
   use Daguex.DaguexCase
 
+  alias __MODULE__
   alias Daguex.Processor.PersistImage
   alias Daguex.Pipeline
   import Daguex.ContextHelper
@@ -21,6 +22,21 @@ defmodule Daguex.Processor.PersistImageTest do
       context = create_context(@image, "test")
       {:ok, _} = Pipeline.call(context, [{PersistImage, [repo: TestRepo]}])
       {:ok, _} = TestRepo.load("test", [])
+    end
+
+    test "should persist a stale image" do
+      defmodule StaleRepo do
+        @behaviour Daguex.Repo
+        def dump(image, updater, opts \\ []) do
+          {:ok, updater.(image)}
+        end
+
+        def load(image, opts \\[]) do
+        end
+      end
+
+      context = create_context(@image, "test")
+      {:ok, _} = Pipeline.call(context, [{PersistImage, [repo: PersistImageTest.StaleRepo]}])
     end
   end
 end
