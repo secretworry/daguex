@@ -3,14 +3,18 @@ defmodule Daguex.Processor.StorageHelper do
   Helpers for using `Daguex.Processor` in the `Daguex.Processor`
   """
 
+  @local_storage_key "__local__"
+
   alias Daguex.{Image, ImageFile, ImageHelper}
+
+  def local_storage_key, do: @local_storage_key
 
   def put_local_image(context, image_file, format) do
     key = ImageHelper.variant_key(image_file, context.image.key, format)
     bucket = Keyword.get(context.opts, :bucket)
     {local_storage, opts} = context.local_storage
-    with {:ok, image} <- put_image(context.image, image_file, bucket, key, format, "local", context.local_storage),
-         store_key     <- get_key(image, "local", format),
+    with {:ok, image} <- put_image(context.image, image_file, bucket, key, format, @local_storage_key, context.local_storage),
+         store_key     <- get_key(image, @local_storage_key, format),
          image        <- update_variant(image, format, key, image_file),
          {:ok, path}  <- local_storage.get(store_key, opts),
          {:ok, image_file} <- ImageFile.from_file(path) do

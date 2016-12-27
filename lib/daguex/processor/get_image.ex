@@ -36,7 +36,7 @@ defmodule Daguex.Processor.GetImage do
 
   defp prepend_local_storage(storages, context) do
     {storage, opts} = context.local_storage
-    [{"local", storage, opts} | storages]
+    [{Daguex.Processor.StorageHelper.local_storage_key, storage, opts} | storages]
   end
 
   def put_result(context, image) do
