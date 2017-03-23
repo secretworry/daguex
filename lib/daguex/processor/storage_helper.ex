@@ -27,9 +27,9 @@ defmodule Daguex.Processor.StorageHelper do
     case get_cached_local_image(context, format) do
       nil ->
         {local_storage, opts} = context.local_storage
-        case Image.get_variant(context.image, format) do
+        case get_key(context.image, @local_storage_key, format) do
           nil -> {:error, :not_found}
-          %{"key" => key} ->
+          key ->
             with {:ok, path} <- local_storage.get(key, opts),
                  {:ok, image_file} <- ImageFile.from_file(path) do
               context = context |> cache_local_image(format, image_file)

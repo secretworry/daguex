@@ -14,5 +14,8 @@
 erl_crash.dump
 
 # Also ignore archive artifacts (built via "mix archive.build").
->>>>>>> init import
 *.ez
+
+# Ignore Intellij config directory
+.idea
+
