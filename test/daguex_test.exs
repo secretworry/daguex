@@ -47,6 +47,7 @@ defmodule DaguexTest do
   end
 
   describe "resolve/3" do
+
     test "should resovle without error", context do
       pid = Map.get(context, :local_storage_pid)
       defmodule ResolveDaguex do
@@ -59,6 +60,30 @@ defmodule DaguexTest do
       {:ok, image_file} = ImageFile.from_file(@image)
       {:ok, key} = ResolveDaguex.put(image_file, "key", bucket: "bucket")
       {:ok, _url} = ResolveDaguex.resolve(key, "s100", [])
+    end
+
+    test "should resolve an image without converting specified format", context do
+      pid = Map.get(context, :local_storage_pid)
+      defmodule ResolveDaguex do
+        use Daguex.Builder
+        local_storage TestStorage
+        repo TestRepo
+        storage "test", TestStorage, [pid: pid]
+        variant "s100", Daguex.Variant.DefaultConverter, size: "100x100"
+      end
+      defmodule UpdatedDaguex do
+        use Daguex.Builder
+        local_storage TestStorage
+        repo TestRepo
+        storage "test", TestStorage, [pid: pid]
+        variant "s100", Daguex.Variant.DefaultConverter, size: "100x100"
+        variant "s200", Daguex.Variant.DefaultConverter, size: "200x200"
+      end
+
+      {:ok, image_file} = ImageFile.from_file(@image)
+      {:ok, key} = ResolveDaguex.put(image_file, "key", bucket: "bucket")
+      {:ok, image} = UpdatedDaguex.resolve(key, "s200", [])
+      assert File.exists?(image.uri.path)
     end
   end
 
@@ -76,6 +101,7 @@ defmodule DaguexTest do
       {:ok, image_file} = ImageFile.from_file(@image)
       {:ok, key} = GetDaguex.put(image_file, "key", bucket: "bucket")
       {:ok, _path} = GetDaguex.get(key, "s100", [])
+
     end
 
     test "should get an image without converting specified format", context do
